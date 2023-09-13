@@ -294,7 +294,6 @@ void task_7()
     Trip **auxarray = (Trip **)calloc(num_of_trips, sizeof(Trip *));
     int size = 0;
     select_trips_by_string_retry(trips, auxarray, num_of_trips, "a", &size);
-    // sort_trips(auxarray, size);
     qsort(trips, size, sizeof(Trip *), trips_comparator);
     for (int i = 0; i < size; i++)
     {
