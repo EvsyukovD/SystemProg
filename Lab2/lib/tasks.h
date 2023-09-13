@@ -59,4 +59,6 @@ int compare(const TownAddress*,const TownAddress*);
 void release_town_address(TownAddress *townAddress);
 void release_profile(Profile *profile);
 void release_trip(Trip*);
+void print_trip(const Trip* t);
+void print_trips(const Trip** arr, int size);
 #endif

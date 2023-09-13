@@ -287,18 +287,30 @@ void select_trips_by_string_retry(Trip **src, Trip **dest, int trips_num, const 
     }
     *size_of_dest = j;
 }
+void print_trip(const Trip* t){
+    printf("Dest: %s\n", t->dest);
+    printf("Time start: %d:%d:%d\n", t->start.tm_hour, t->start.tm_min, t->start.tm_sec);
+    printf("Time finish: %d:%d:%d\n", t->finish.tm_hour, t->finish.tm_min, t->finish.tm_sec);
+    printf("Duration %d\n", t->duration);
+}
+void print_trips(const Trip** trips, int size){
+    for (int i = 0; i < size; i++)
+    {
+        print_trip(trips[i]);
+    }
+}
 void task_7()
 {
     int num_of_trips = 10;
     Trip **trips = create_random_trips(num_of_trips);
     Trip **auxarray = (Trip **)calloc(num_of_trips, sizeof(Trip *));
     int size = 0;
+    printf("Trips:\n");
+    print_trips(trips, num_of_trips);
     select_trips_by_string_retry(trips, auxarray, num_of_trips, "a", &size);
     qsort(trips, size, sizeof(Trip *), trips_comparator);
-    for (int i = 0; i < size; i++)
-    {
-        printf("destination: %s\n", auxarray[i]->dest);
-    }
+    printf("\nNew array:\n");
+    print_trips(auxarray, size);
     for (int i = 0; i < num_of_trips; i++)
     {
         release_trip(trips[i]);
