@@ -1,18 +1,13 @@
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
-#include <time.h>
 #include "lib/tasks.h"
-#include "lib/sort.h"
 
 int main(int argc, char *argv[])
 {
-    /*printf("Task 1:\n");
-    task_1();*/
-    
+    printf("Task 1:\n");
+    task_1();
     printf("Task 2:\n");
     task_2();
-    /*printf("Task 3:\n");
+    printf("Task 3:\n");
     task_3();
     printf("Task 4:\n");
     task_4();
@@ -21,6 +16,6 @@ int main(int argc, char *argv[])
     printf("Task 6:\n");
     task_6();
     printf("Task 7:\n");
-    task_7();*/
+    task_7();
     return 0;
 }
