@@ -120,6 +120,9 @@ void task_4()
     int* ptr = (int *)realloc(b, j * sizeof(int));
     if(!ptr){
         printf("Can't shrink array b\n");
+        free(a);
+        free(b);
+        return;
     }
    // b = ptr;
     // sort
@@ -184,6 +187,10 @@ TownAddress *create_random_townaddress()
     res->flat = 1;  // rand() % 300 + 1;
     res->house = 1; // rand() % 100 + 1;
     res->street = (char *)calloc(str_size, sizeof(char));
+    if(!res->street){
+        release_town_address(res);
+        return NULL;
+    }
     int i = 0; // rand() % n;
     strcpy(res->street, some_streets[i]);
     return res;
