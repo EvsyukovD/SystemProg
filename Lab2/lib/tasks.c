@@ -95,7 +95,7 @@ int int_comparator(const void *a, const void *b)
 void task_4()
 {
     int n = 10;
-    int m = 1; //current size of b
+    int m = 1; //initial size of b
     int* ptr = NULL;
     const int QUOTA_SIZE = 5; 
     int *a = (int *)calloc(n, sizeof(int));
@@ -124,6 +124,7 @@ void task_4()
                     printf("Can't reallocate memory for array b\n");
                     free(b);
                     free(a);
+                    return;
                 }
                 b = ptr;
             }
@@ -134,6 +135,7 @@ void task_4()
         printf("Number of positive values is 0\n");
         free(a);
         free(b);
+        return;
     }
     ptr = (int *)realloc(b, j * sizeof(int));
     if(!ptr){
@@ -142,10 +144,10 @@ void task_4()
         free(b);
         return;
     }
+    b = ptr;
     // sort
     // size of b = j
-    b = ptr;
-    qsort(ptr, j, sizeof(int), int_comparator);
+    qsort(b, j, sizeof(int), int_comparator);
     printf("b:");
     for (int i = 0; i < j; i++)
     {
