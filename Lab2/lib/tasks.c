@@ -124,7 +124,6 @@ void task_4()
         free(b);
         return;
     }
-   // b = ptr;
     // sort
     // size of b = j
     qsort(ptr, j, sizeof(int), int_comparator);
