@@ -23,6 +23,12 @@ void task_2()
 {
     double *x = (double *)calloc(1, sizeof(double));
     double *y = (double *)calloc(1, sizeof(double));
+    if(!x || !y){
+        free(x);
+        free(y);
+        printf("Can't allocate memory\n");
+        return;
+    }
     scanf("%lf %lf", x, y);
     *x = *x * 2.0;
     printf("%0.5lf %0.5lf\n", *x, *y);
@@ -36,6 +42,12 @@ void task_3()
     int n = 10, m = 20;
     int *x = (int *)calloc(n, sizeof(int));
     int *y = (int *)calloc(m, sizeof(int));
+    if(!x || !y){
+        free(x);
+        free(y);
+        printf("Can't allocate memory\n");
+        return;
+    }
     int num = 0, i = 0, j = 0;
     while (i < n || j < m)
     { // init arrays x and y
@@ -85,6 +97,12 @@ void task_4()
     int n = 10;
     int *a = (int *)calloc(n, sizeof(int));
     int *b = (int *)calloc(n, sizeof(int));
+    if(!a || !b){
+        free(a);
+        free(b);
+        printf("Can't allocate memory\n");
+        return;
+    }
     int j = 0; // free position in b array
     printf("a:");
     //init a and in the same time find positive ints in it
@@ -99,17 +117,22 @@ void task_4()
         }
     }
     printf("\n");
+    int* ptr = (int *)realloc(b, j * sizeof(int));
+    if(!ptr){
+        printf("Can't shrink array b\n");
+    }
+   // b = ptr;
     // sort
     // size of b = j
-    qsort(b, j, sizeof(int), int_comparator);
+    qsort(ptr, j, sizeof(int), int_comparator);
     printf("b:");
     for (int i = 0; i < j; i++)
     {
-        printf("%d ", b[i]);
+        printf("%d ", ptr[i]);
     }
     printf("\n");
     free(a);
-    free(b);
+    free(ptr);
 }
 
 void minutes2seconds(int minutes, long *seconds)
@@ -155,6 +178,9 @@ TownAddress *create_random_townaddress()
     const char *some_streets[] = {"Street 1", "Street 2", "Street 3"};
     int n = sizeof(some_streets) / sizeof(char *);
     TownAddress *res = (TownAddress *)calloc(1, sizeof(TownAddress));
+    if(!res){
+        return NULL;
+    }
     res->flat = 1;  // rand() % 300 + 1;
     res->house = 1; // rand() % 100 + 1;
     res->street = (char *)calloc(str_size, sizeof(char));
@@ -171,20 +197,47 @@ Profile *create_random_data_profile()
     int last_names_num = sizeof(last_names) / sizeof(char *);
 
     Profile *res = (Profile *)calloc(1, sizeof(Profile));
+    if(!res){
+        return NULL;
+    }
     res->town = (char *)calloc(town_str_size, sizeof(char));
     res->last_name = (char *)calloc(last_name_size, sizeof(char));
 
+    if(!res->town || !res->last_name){
+        release_profile(res);
+        return NULL;
+    }
     strcpy(res->town, towns[rand() % towns_num]);
     strcpy(res->last_name, last_names[rand() % last_names_num]);
     res->address = create_random_townaddress();
+    if(!res->address){
+        release_profile(res);
+        return NULL;
+    }
     return res;
+}
+void release_profiles(Profile** profiles, int size){
+    if(profiles){
+        for (int i = 0; i < size; i++)
+        {
+            release_profile(profiles[i]);
+        }
+        free(profiles);
+    }
 }
 Profile **create_random_data_profiles(int num_of_profiles)
 {
     Profile **profiles = (Profile **)calloc(num_of_profiles, sizeof(Profile *));
+    if(!profiles){
+        return NULL;
+    }
     for (int i = 0; i < num_of_profiles; i++)
     {
         profiles[i] = create_random_data_profile();
+        if(!profiles[i]){
+            release_profiles(profiles, i + 1);
+            return NULL;
+        }
     }
     return profiles;
 }
@@ -209,22 +262,34 @@ void task_6()
             }
         }
     }
-
-    for (int i = 0; i < num_of_profiles; i++)
-    {
-        release_profile(profiles[i]);
-    }
-    free(profiles);
+    release_profiles(profiles, num_of_profiles);
+}
+void release_trips(Trip** t, int size){
+     if(t){
+        for (int i = 0; i < size; i++)
+        {
+            release_trip(t[i]);
+        }
+        free(t);
+     }
 }
 Trip *create_random_trip()
 {
     int str_size = 20;
     srand(time(NULL));
     static int i = 0;
-    const char *towns[] = {"Moscow", "St. Peterburg", "Omsk", "Archangelsk", "Arzamas", "Paris", "Washington", "Osaka", "Okinava"};
+    const char *towns[] = {"Moscow", "St. Peterburg", "Omsk",  "Paris", "Washington", "Tomsk","Yakutsk","Vladivostok", 
+    "Osaka", "Okinava", "Archangelsk", "Arzamas"};
     int towns_num = sizeof(towns) / sizeof(char *);
     Trip *trip = (Trip *)calloc(1, sizeof(Trip));
+    if(!trip){
+        return NULL;
+    }
     trip->dest = (char *)calloc(str_size, sizeof(char));
+    if(!trip->dest){
+        release_trip(trip);
+        return NULL;
+    }
     strcpy(trip->dest, towns[i % towns_num]);
     i++;// - for static i
 
@@ -240,9 +305,16 @@ Trip *create_random_trip()
 Trip **create_random_trips(int num_of_trips)
 {
     Trip **trips = (Trip **)calloc(num_of_trips, sizeof(Trip *));
+    if(!trips){
+        return NULL;
+    }
     for (int i = 0; i < num_of_trips; i++)
     {
         trips[i] = create_random_trip();
+        if(!trips[i]){
+            release_trips(trips, i + 1);
+            return NULL;
+        }
     }
     return trips;
 }
@@ -304,6 +376,12 @@ void task_7()
     int num_of_trips = 10;
     Trip **trips = create_random_trips(num_of_trips);
     Trip **auxarray = (Trip **)calloc(num_of_trips, sizeof(Trip *));
+    if(!trips || !auxarray){
+        release_trips(trips, num_of_trips);
+        release_trips(auxarray, num_of_trips);
+        printf("Can't allocate memory\n");
+        return;
+    }
     int size = 0;
     printf("Trips:\n");
     print_trips(trips, num_of_trips);
@@ -311,10 +389,6 @@ void task_7()
     qsort(trips, size, sizeof(Trip *), trips_comparator);
     printf("\nNew array:\n");
     print_trips(auxarray, size);
-    for (int i = 0; i < num_of_trips; i++)
-    {
-        release_trip(trips[i]);
-    }
-    free(trips);
+    release_trips(trips, num_of_trips);
     free(auxarray);
 }

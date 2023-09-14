@@ -58,7 +58,9 @@ Profile **create_random_data_profiles(int size);
 int compare(const TownAddress*,const TownAddress*);
 void release_town_address(TownAddress *townAddress);
 void release_profile(Profile *profile);
+void release_profiles(Profile** profiles, int size);
 void release_trip(Trip*);
+void release_trips(Trip** trips, int size);
 void print_trip(const Trip* t);
 void print_trips(const Trip** arr, int size);
 #endif
