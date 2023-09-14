@@ -144,15 +144,16 @@ void task_4()
     }
     // sort
     // size of b = j
+    b = ptr;
     qsort(ptr, j, sizeof(int), int_comparator);
     printf("b:");
     for (int i = 0; i < j; i++)
     {
-        printf("%d ", ptr[i]);
+        printf("%d ", b[i]);
     }
     printf("\n");
     free(a);
-    free(ptr);
+    free(b);
 }
 
 void minutes2seconds(int minutes, long *seconds)
