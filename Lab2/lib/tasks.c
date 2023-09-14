@@ -121,6 +121,7 @@ void task_4()
         printf("Number of positive values is 0\n");
         free(a);
         free(b);
+        return;
     }
     int* ptr = (int *)realloc(b, j * sizeof(int));
     if(!ptr){
