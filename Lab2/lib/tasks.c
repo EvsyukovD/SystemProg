@@ -117,6 +117,11 @@ void task_4()
         }
     }
     printf("\n");
+    if(j == 0){
+        printf("Number of positive values is 0\n");
+        free(a);
+        free(b);
+    }
     int* ptr = (int *)realloc(b, j * sizeof(int));
     if(!ptr){
         printf("Can't shrink array b\n");
@@ -124,6 +129,7 @@ void task_4()
         free(b);
         return;
     }
+   // b = ptr;
     // sort
     // size of b = j
     qsort(ptr, j, sizeof(int), int_comparator);
@@ -255,7 +261,10 @@ void task_6()
 {
     int num_of_profiles = 100;
     Profile **profiles = create_random_data_profiles(num_of_profiles);
-
+    if(!profiles){
+        printf("Can't allocate memory");
+        return;
+    }
     for (int i = 0; i < num_of_profiles; i++)
     {
         for (int j = i + 1; j < num_of_profiles; j++)
