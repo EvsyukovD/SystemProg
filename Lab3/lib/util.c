@@ -31,7 +31,7 @@ char *Wchar2Char(const wchar_t *wstr)
     WideCharToMultiByte(CP_ACP, 0, wstr, -1, str, size * sizeof(char), NULL, NULL);
     return str;
 }
-void UtilCreateFile(const wchar_t *name, const wchar_t *data)
+WINBOOL UtilCreateFile(const wchar_t *name, const wchar_t *data)
 {
     int error;
     char* desc = NULL;
@@ -140,9 +140,9 @@ DWORD UtilGetFileAttributes(const wchar_t* path){
        PrintLastError();
        return INVALID_FILE_ATTRIBUTES; 
     }
-    return attributes;
-   // wprintf(L"File attributes for file %S:\n", path);
+    //wprintf(L"File attributes for file %S:\n", path);
     //PrintFileAttributes(attributes);
+    return attributes;
 }
 WINBOOL UtilCopyFile(const wchar_t* src_path, const wchar_t* dest_path){
    WINBOOL res = CopyFileW(src_path, dest_path, 0);
@@ -158,6 +158,118 @@ WINBOOL UtilSetFileAttributes(const wchar_t* path, DWORD attribute){
     }
     return res;
 }
-void UtilPrintFolderContentRec(const wchar_t* path){
+void UtilPrintFolderContentRec(const wchar_t* root){
+    WIN32_FIND_DATA fd;
+    int len = 0;
+    const int N = 1024;
+    wchar_t buf[N];
+    //int dir = 0, file = 0;
+    HANDLE hFind = FindFirstFileW(root, &fd);
+    if(hFind != INVALID_HANDLE_VALUE)
+    {
+    do
+        {
+            if (fd.dwFileAttributes != FILE_ATTRIBUTE_REPARSE_POINT)
+            {
+                if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                {
+                    printf("Folder: %S\n", fd.cFileName);
+                    //GetFullPathNameW(fd.cFileName,N ,buf, NULL);
+                    //UtilPrintFolderContentRec(fd.cFileName);
+                   // dir++;
+                }
+                else
+                {
+                    printf("File: %S\n", fd.cFileName);
+                    //file++;
+                }
+            }
+        }
+        while(FindNextFileW(hFind, &fd));
+       // printf("%d\n", file);
+       // printf("%d\n", dir);
+        FindClose(hFind);
+    }
+}
+
+void create_file(){
+     const int N = 1024;
+     wchar_t name[N];
+     wchar_t data[N];
+     puts("Enter file path:");
+     scanf(L"%S", name);
+     puts("Enter data for this file:");
+     scanf(L"%S", data);
+     UtilCreateFile(name, data);
+}
+void read_file(){
      
+}
+void delete_file(){
+     const int N = 1024;
+     wchar_t name[N];
+     puts("Enter file path:");
+     scanf(L"%S", name);
+     UtilDeleteFile(name);
+}
+void rename_file(){
+     const int N = 1024;
+     wchar_t old_name[N];
+     wchar_t new_name[N];
+     puts("Enter old file name:");
+     scanf(L"%S", old_name);
+     puts("Enter new file name:");
+     scanf(L"%S", new_name);
+     UtilRenameFile(old_name, new_name);
+}
+void copy_file(){
+   const int N = 1024;
+     wchar_t src[N];
+     wchar_t dest[N];
+     puts("Enter src file name:");
+     scanf("%S", src);
+     puts("Enter dest file name:");
+     scanf(L"%S", dest);
+     UtilCopyFile(src, dest);
+}
+void get_size(){
+     const int N = 1024;
+     wchar_t name[N];
+     puts("Enter file path:");
+     scanf(L"%S", name);
+     DWORD res = UtilGetSizeOfFile(name);
+     printf("Size of this file: %ld bytes", res);
+}
+void get_attributes(){
+     const int N = 1024;
+     wchar_t name[N];
+     puts("Enter file path:");
+     scanf(L"%S", name);
+     DWORD attributes = UtilGetFileAttributes(name);
+     wprintf(L"File attributes for file %S:\n", name);
+     PrintFileAttributes(attributes);
+}
+void set_attributes(){
+     const int N = 1024;
+     wchar_t name[N];
+     puts("Enter file path:");
+     scanf(L"%S", name);
+     puts("Make readonly (type 1) file or hidden (type 0):");
+     int type = 0;
+     scanf("%d",&type);
+     DWORD attributes = UtilGetFileAttributes(name);
+     switch (type)
+     {
+     case 1:
+        UtilSetFileAttributes(name, attributes | FILE_ATTRIBUTE_READONLY);
+        break;
+     case 0:
+        UtilSetFileAttributes(name, attributes | FILE_ATTRIBUTE_HIDDEN);  
+        break;
+     default:
+        break;
+     }
+}
+void print_folder_content(){
+    
 }
