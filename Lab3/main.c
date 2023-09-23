@@ -1,11 +1,13 @@
+#define _CRTDBG_MAP_ALLOC
 #include "lib/util.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <crtdbg.h>
 int main(int argc, char *argv[])
 {
     void (*fptrs[])() = {NULL, create_file, read_file, delete_file,
                          rename_file, copy_file, get_size, get_attributes, 
-                         set_attributes, print_folder_content};
+                         set_attributes, print_folder_content,arrange_symbols,count_symbols,delete_symbols,sort_nums};
     int res = 0, n = 0;
     int size = sizeof(fptrs) / sizeof(fptrs[1]);
     print_options();
@@ -29,5 +31,6 @@ int main(int argc, char *argv[])
     // const char *name = "C:\\Users\\devsy\\Desktop\\SysProg\\Lab3\\test\\file.txt";
     // const char *new_name = "C:\\Users\\devsy\\Desktop\\SysProg\\Lab3\\test\\file3.txt";
     // const char *folder = "C:\\Users\\devsy\\Desktop\\SysProg\\Lab3";
+    //_CrtDumpMemoryLeaks();
     return 0;
 }
