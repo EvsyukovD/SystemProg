@@ -30,7 +30,7 @@ typedef struct {
   size_t fsize;
   char* dataPtr;
 } FileMapping;
-
+int* convert_bytes_to_i(const char* bytes, int* size, char sep);
 wchar_t* Char2Wchar(const char *);
 char* Wchar2Char(const wchar_t*);
 void PrintLastError();

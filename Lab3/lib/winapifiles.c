@@ -92,7 +92,6 @@ WINBOOL UtilRenameFile(const wchar_t *path, const wchar_t *new_name)
    }
    return res;
 }
-
 WINBOOL UtilReadFile(const wchar_t *path, wchar_t *buffer, int size)
 {
    HANDLE file = INVALID_HANDLE_VALUE;
@@ -267,7 +266,7 @@ void UtilPrintFolderContent(const wchar_t *path)
 {
    UtilPrintFolderContentRec(path, 0);
 }
-
+/*
 FileMapping *UtilGetFileMapping(const wchar_t *path)
 {
    HANDLE hFile = CreateFileW(path, FILE_GENERIC_READ | FILE_GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ, NULL,
@@ -403,8 +402,35 @@ int atoi_before_sep(const char* src, char sep){
    return res;
 }
 int int_comparator_decrease(const void *a, const void* b){
-    return (*((int *)a) - *((int *)a));
+    return (*((int *)b) - *((int *)a));
     
+}
+
+int* convert_bytes_to_i(const char* bytes, int* size, char sep){
+    const int QUOTA = 4;
+    int N = 10;
+    int* res = (int*) calloc(N, sizeof(int)), *ptr = NULL;
+    int j = 0; //actual size of res
+    char* prev = bytes;
+    int len = strlen(bytes) + 1;
+    for (int i = 0; i < len; i++)
+    {
+         if(bytes[i] == sep || !bytes[i] ){
+            if(j == N){
+               ptr = (int*)realloc(res, (N + QUOTA) * sizeof(int));
+               if(!ptr){
+                  free(res);
+                  return NULL;
+               }
+               N += QUOTA;
+            }
+            res[j] = atoi_before_sep(prev, sep);
+            j++;
+            prev = bytes + i + 1;
+         }
+    }
+    *size = j;
+    return res;
 }
 void UtilFileMappingSortNumsDecrease(const wchar_t *path) {
    FileMapping *mapping = UtilGetFileMapping(path);
@@ -413,12 +439,28 @@ void UtilFileMappingSortNumsDecrease(const wchar_t *path) {
       PrintLastError();
       return;
    }
-   int len = mapping->fsize / sizeof(int);
-   int* data = (int*)mapping->dataPtr;
+   int len = 0;
+   char buffer[20] = {0};
+   int *data = convert_bytes_to_i(mapping->dataPtr, &len, ' ');
+   if(!data){
+      printf("Can't convert bytes to integers\n");
+      UtilReleaseFileMapping(mapping);
+      return;
+   }
+   char* ptr = mapping->dataPtr;
    qsort(data, len, sizeof(int), int_comparator_decrease);
+   for (int i = 0; i < len; i++)
+   {
+      itoa(data[i], buffer, 10);
+      strcpy(ptr, buffer);
+      ptr += strlen(buffer);
+      *ptr = ' ';
+      ptr += 1;
+   }
+   free(data);
    UtilReleaseFileMapping(mapping);
 }
-
+*/
 void create_file()
 {
    const int N = 1024;
@@ -561,6 +603,7 @@ void print_options()
       printf("%s\n", options[i]);
    }
 }
+/*
 void arrange_symbols(){
    const int N = 1024;
    const int M = N - 1;
@@ -599,3 +642,4 @@ void sort_nums(){
    scanf("%S", name);
    UtilFileMappingSortNumsDecrease(name);
 }
+*/
