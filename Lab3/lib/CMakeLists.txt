@@ -1,1 +1,1 @@
-add_library(LIB winapifiles.c util.h getline.c fmap.c)
+add_library(LIB winapifiles.c util.h fmap.c commonfuncs.c)

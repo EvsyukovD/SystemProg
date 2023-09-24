@@ -58,28 +58,25 @@ void UtilReleaseFileMapping(FileMapping *mapping)
       free(mapping);
    }
 }
-int alphabet_comparator(const void *a, const void *b)
-{
-   return (*((char *)a) - *((char *)b));
-}
-void UtilFileMappingArrangeBySymbols(const wchar_t *path)
+WINBOOL UtilFileMappingArrangeBySymbols(const wchar_t *path)
 {
    FileMapping *mapping = UtilGetFileMapping(path);
    if (!mapping)
    {
       PrintLastError();
-      return;
+      return 0;
    }
    qsort(mapping->dataPtr, mapping->fsize, sizeof(char), alphabet_comparator);
    UtilReleaseFileMapping(mapping);
+   return 1;
 }
-void UtilFileMappingCalculateSymbols(const wchar_t *path, int* num_of_uppers, int* num_of_lows)
+WINBOOL UtilFileMappingCalculateSymbols(const wchar_t *path, int* num_of_uppers, int* num_of_lows)
 {
    FileMapping *mapping = UtilGetFileMapping(path);
    if (!mapping)
    {
       PrintLastError();
-      return;
+      return 0;
    }
    long uppers = 0, lows = 0;
    for (int i = 0; i < mapping->fsize; i++)
@@ -94,22 +91,15 @@ void UtilFileMappingCalculateSymbols(const wchar_t *path, int* num_of_uppers, in
    UtilReleaseFileMapping(mapping);
    *num_of_lows = lows;
    *num_of_uppers = uppers;
-   return;
+   return 1;
 }
-void remove_by_index(char *src, int idx)
-{
-   for (int i = idx; src[i]; i++)
-   {
-      src[i] = src[i + 1];
-   }
-}
-void UtilFileMappingDeleteStringFromFile(const wchar_t *path, const char *str)
+WINBOOL UtilFileMappingDeleteStringFromFile(const wchar_t *path, const char *str)
 {
    FileMapping *mapping = UtilGetFileMapping(path);
    if (!mapping)
    {
       PrintLastError();
-      return;
+      return 0;
    }
    int n = strlen(str);
    char *ptr = strstr(mapping->dataPtr, str);
@@ -122,56 +112,14 @@ void UtilFileMappingDeleteStringFromFile(const wchar_t *path, const char *str)
       ptr = strstr(mapping->dataPtr, str);
    }
    UtilReleaseFileMapping(mapping);
+   return 1;
 }
-int atoi_before_sep(const char* src, char sep){
-   int res = 0;
-   int negFlag = src[0] == '-' ? 1 : 0;
-   for (int i = negFlag; src[i] && src[i] != sep; i++)
-   {
-        res = 10 * res + src[i] - '0';
-   }
-   if(negFlag){
-      res = -res;
-   }
-   return res;
-}
-int int_comparator_decrease(const void *a, const void* b){
-    return (*((int *)b) - *((int *)a));
-    
-}
-
-int* convert_bytes_to_i(const char* bytes, int* size, char sep){
-    const int QUOTA = 4;
-    int N = 10;
-    int* res = (int*) calloc(N, sizeof(int)), *ptr = NULL;
-    int j = 0; //actual size of res
-    char* prev = bytes;
-    int len = strlen(bytes) + 1;
-    for (int i = 0; i < len; i++)
-    {
-         if(bytes[i] == sep || !bytes[i] ){
-            if(j == N){
-               ptr = (int*)realloc(res, (N + QUOTA) * sizeof(int));
-               if(!ptr){
-                  free(res);
-                  return NULL;
-               }
-               N += QUOTA;
-            }
-            res[j] = atoi_before_sep(prev, sep);
-            j++;
-            prev = bytes + i + 1;
-         }
-    }
-    *size = j;
-    return res;
-}
-void UtilFileMappingSortNumsDecrease(const wchar_t *path) {
+WINBOOL UtilFileMappingSortNumsDecrease(const wchar_t *path) {
    FileMapping *mapping = UtilGetFileMapping(path);
    if (!mapping)
    {
       PrintLastError();
-      return;
+      return 0;
    }
    int len = 0;
    char buffer[20] = {0};
@@ -179,7 +127,7 @@ void UtilFileMappingSortNumsDecrease(const wchar_t *path) {
    if(!data){
       printf("Can't convert bytes to integers\n");
       UtilReleaseFileMapping(mapping);
-      return;
+      return 0;
    }
    char* ptr = mapping->dataPtr;
    qsort(data, len, sizeof(int), int_comparator_decrease);
@@ -193,6 +141,7 @@ void UtilFileMappingSortNumsDecrease(const wchar_t *path) {
    }
    free(data);
    UtilReleaseFileMapping(mapping);
+   return 1;
 }
 void arrange_symbols(){
    const int N = 1024;

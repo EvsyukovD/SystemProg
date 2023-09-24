@@ -30,6 +30,7 @@ typedef struct {
   size_t fsize;
   char* dataPtr;
 } FileMapping;
+
 int* convert_bytes_to_i(const char* bytes, int* size, char sep);
 wchar_t* Char2Wchar(const char *);
 char* Wchar2Char(const wchar_t*);
@@ -44,12 +45,12 @@ WINBOOL UtilCopyFile(const wchar_t* src_path, const wchar_t* dest_path);
 DWORD UtilGetSizeOfFile(const wchar_t* path);
 DWORD UtilGetFileAttributes(const wchar_t* path);
 WINBOOL UtilSetFileAttributes(const wchar_t* path, DWORD attribute);
-void UtilPrintFolderContentRec(const wchar_t* path, int tabs);
-void UtilPrintFolderContent(const wchar_t* path);
+WINBOOL UtilPrintFolderContentRec(const wchar_t* path, int tabs);
+WINBOOL UtilPrintFolderContent(const wchar_t* path);
 FileMapping* UtilGetFileMapping(const wchar_t* path);
 void UtilReleaseFileMapping(FileMapping* mapping);
-void UtilFileMappingArrangeBySymbols(const wchar_t* path);
-void UtilFileMappingCalculateSymbols(const wchar_t* path,int* num_of_uppers, int * num_of_lows);
-void UtilFileMappingDeleteStringFromFile(const wchar_t* path, const char* str);
-void UtilFileMappingSortNumsDecrease(const wchar_t* path);
+WINBOOL UtilFileMappingArrangeBySymbols(const wchar_t* path);
+WINBOOL UtilFileMappingCalculateSymbols(const wchar_t* path,int* num_of_uppers, int * num_of_lows);
+WINBOOL UtilFileMappingDeleteStringFromFile(const wchar_t* path, const char* str);
+WINBOOL UtilFileMappingSortNumsDecrease(const wchar_t* path);
 #endif
