@@ -1,4 +1,4 @@
-#include "util.h"
+#include "../include/util.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -72,6 +72,7 @@ WINBOOL UtilFileMappingArrangeBySymbols(const wchar_t *path)
 }
 WINBOOL UtilFileMappingCalculateSymbols(const wchar_t *path, int* num_of_uppers, int* num_of_lows)
 {
+   char buffer[10] = {0};
    FileMapping *mapping = UtilGetFileMapping(path);
    if (!mapping)
    {
@@ -88,6 +89,18 @@ WINBOOL UtilFileMappingCalculateSymbols(const wchar_t *path, int* num_of_uppers,
          lows++;
       }
    }
+   itoa(uppers + lows, buffer, 10);
+   int len = strlen(buffer), written_bytes = 0;
+   SetFilePointer(mapping->hFile, 0, 0, FILE_END);
+   int res = WriteFile(mapping->hFile,buffer, len, &written_bytes, NULL);
+   if(!res){
+      PrintLastError();
+      SetFilePointer(mapping->hFile, 0, 0, FILE_BEGIN);
+      return 0;
+   }
+   //sprintf(mapping->dataPtr + strlen(mapping->dataPtr), "%s", buffer);
+   //strcat(mapping->dataPtr, buffer);
+   SetFilePointer(mapping->hFile, 0, 0, FILE_BEGIN);
    UtilReleaseFileMapping(mapping);
    *num_of_lows = lows;
    *num_of_uppers = uppers;

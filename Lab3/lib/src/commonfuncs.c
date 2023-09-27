@@ -1,4 +1,4 @@
-#include "util.h"
+#include "../include/util.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -67,7 +67,11 @@ void remove_by_index(char *src, int idx)
 {
    for (int i = idx; src[i]; i++)
    {
-      src[i] = src[i + 1];
+      if(!src[i + 1]){
+         src[i] = ' ';
+      } else {
+         src[i] = src[i + 1];
+      }
    }
 }
 int atoi_before_sep(const char* src, char sep){

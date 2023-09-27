@@ -19,8 +19,24 @@ void delete_symbols();
 void sort_nums();
 
 ssize_t getline(char **restrict buffer, size_t *restrict size, FILE *restrict fp);
+/**
+ * @brief Simple compare of 2 bytes
+ * @param a  1-st byte
+ * @param b  2-nd byte
+ * @return a - b
+*/
 int alphabet_comparator(const void* a, const void* b);
+/**
+ * @brief Remove bytes by left shift of string. Empty positions - space
+ * @param src source string
+ * @param idx  index of removed bytes
+*/
 void remove_by_index(char *src, int idx);
+/**
+ * @brief Convert string before first separator to integer
+ * @param src source string
+ * @param sep separator char
+*/
 int atoi_before_sep(const char* src, char sep);
 int int_comparator_decrease(const void *a, const void* b);
 
