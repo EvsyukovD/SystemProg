@@ -240,7 +240,7 @@ WINBOOL UtilPrintFolderContent(const wchar_t *path)
    return UtilPrintFolderContentRec(path, 0);
 }
 
-void create_file()
+void create_file_dialog()
 {
    const int N = 1024;
    const int M = N - 1;
@@ -256,7 +256,7 @@ void create_file()
 
    UtilCreateFile(name, data);
 }
-void read_file()
+void read_file_dialog()
 {
    const int N = 1024;
    const int M = N - 1;
@@ -270,7 +270,7 @@ void read_file()
    printf("%S", content);
    puts("");
 }
-void delete_file()
+void delete_file_dialog()
 {
    const int N = 1024;
    const int M = N - 1;
@@ -283,7 +283,7 @@ void delete_file()
       puts("File is deleted");
    }
 }
-void rename_file()
+void rename_file_dialog()
 {
    const int N = 1024;
    const int M = N - 1;
@@ -300,7 +300,7 @@ void rename_file()
       printf("File was renamed to %S", new_name);
    }
 }
-void copy_file()
+void copy_file_dialog()
 {
    const int N = 1024;
    const int M = N - 1;
@@ -314,7 +314,7 @@ void copy_file()
    scanf("%S", dest);
    UtilCopyFile(src, dest);
 }
-void get_size()
+void get_size_dialog()
 {
    const int N = 1024;
    const int M = N - 1;
@@ -325,7 +325,7 @@ void get_size()
    DWORD res = UtilGetSizeOfFile(name);
    printf("Size of this file: %ld bytes\n", res);
 }
-void get_attributes()
+void get_attributes_dialog()
 {
    const int N = 1024;
    const int M = N - 1;
@@ -337,7 +337,7 @@ void get_attributes()
    printf("File attributes for file %S:\n", name);
    PrintFileAttributes(attributes);
 }
-void set_attributes()
+void set_attributes_dialog()
 {
    const int N = 1024;
    const int M = N - 1;
@@ -361,7 +361,7 @@ void set_attributes()
       break;
    }
 }
-void print_folder_content()
+void print_folder_content_dialog()
 {
    const int N = 1024;
    const int M = N - 1;
@@ -380,5 +380,115 @@ void print_options()
    for (int i = 0; i < options_num; i++)
    {
       printf("%s\n", options[i]);
+   }
+}
+
+
+void create_file_args(int argc, char *argv[])
+{
+   if(argc >= 4){
+      wchar_t *name = Char2Wchar(argv[2]);
+      wchar_t *data = Char2Wchar(argv[3]);
+      UtilCreateFile(name, data);
+      free(name);
+      free(data);
+   }
+}
+void read_file_args(int argc, char *argv[])
+{
+   if(argc >= 3){
+   const int N = 1024;
+   wchar_t *name = Char2Wchar(argv[2]);
+   wchar_t content[N];
+   UtilReadFile(name, content, N);
+   printf("Data from file:\n");
+   printf("%S", content);
+   puts("");
+   free(name);
+   }
+}
+void delete_file_args(int argc, char *argv[])
+{
+   if(argc >= 2){
+   wchar_t *name = Char2Wchar(argv[2]);
+   if (UtilDeleteFile(name))
+   {
+      puts("File is deleted");
+   }
+   free(name);
+   }
+}
+void rename_file_args(int argc, char *argv[])
+{
+   if(argc >= 4){
+   
+   wchar_t *old_name = Char2Wchar(argv[2]);
+   wchar_t *new_name = Char2Wchar(argv[3]);
+
+   if (UtilRenameFile(old_name, new_name))
+   {
+      printf("File was renamed to %S", new_name);
+   }
+   free(old_name);
+   free(new_name);
+   }
+}
+void copy_file_args(int argc, char *argv[])
+{
+   if(argc >= 4){
+   wchar_t *src = Char2Wchar(argv[2]);
+   wchar_t *dest = Char2Wchar(argv[3]);
+   UtilCopyFile(src, dest);
+   free(src);
+   free(dest);
+   }
+}
+void get_size_args(int argc, char *argv[])
+{
+   if(argc >= 3){
+      wchar_t *name = Char2Wchar(argv[2]);
+      DWORD res = UtilGetSizeOfFile(name);
+      printf("Size of this file: %ld bytes\n", res);
+      free(name);
+   }
+}
+void get_attributes_args(int argc, char *argv[])
+{
+   if(argc >= 3){
+   wchar_t *name = Char2Wchar(argv[2]);
+   DWORD attributes = UtilGetFileAttributes(name);
+   printf("File attributes for file %S:\n", name);
+   PrintFileAttributes(attributes);
+   free(name);
+   }
+}
+void set_attributes_args(int argc, char *argv[])
+{
+   if(argc >= 3){
+   wchar_t *name = Char2Wchar(argv[2]);
+   puts("Make readonly (type 1) file or hidden (type 0):");
+   int type = 0;
+   scanf("%d", &type);
+   DWORD attributes = UtilGetFileAttributes(name);
+   switch (type)
+   {
+   case 1:
+      UtilSetFileAttributes(name, attributes | FILE_ATTRIBUTE_READONLY);
+      break;
+   case 0:
+      UtilSetFileAttributes(name, attributes | FILE_ATTRIBUTE_HIDDEN);
+      break;
+   default:
+      break;
+   }
+   free(name);
+   }
+}
+void print_folder_content_args(int argc, char *argv[])
+{
+   if(argc >= 3){
+   wchar_t *root = Char2Wchar(argv[2]);
+   UtilPrintFolderContent(root);
+   free(root);
    }
 }

@@ -157,7 +157,7 @@ WINBOOL UtilFileMappingSortNumsDecrease(const wchar_t *path) {
    UtilReleaseFileMapping(mapping);
    return 1;
 }
-void arrange_symbols(){
+void arrange_symbols_dialog(){
    const int N = 1024;
    const int M = N - 1;
    wchar_t name[N];
@@ -167,7 +167,7 @@ void arrange_symbols(){
    UtilFileMappingArrangeBySymbols(name);
 
 }
-void count_symbols(){
+void count_symbols_dialog(){
    const int N = 1024;
    const int M = N - 1;
    wchar_t name[N];
@@ -177,7 +177,7 @@ void count_symbols(){
    UtilFileMappingCalculateSymbols(name, &up, &low);
    printf("Num of uppers = %d\n Num of lowers = %d\n", up, low);
 }
-void delete_symbols(){
+void delete_symbols_dialog(){
    const int N = 1024;
    const int M = N - 1;
    wchar_t name[N];
@@ -186,7 +186,7 @@ void delete_symbols(){
    scanf("%S", name);
    UtilFileMappingDeleteStringFromFile(name, "a");
 }
-void sort_nums(){
+void sort_nums_dialog(){
        const int N = 1024;
    const int M = N - 1;
    wchar_t name[N];
@@ -194,4 +194,36 @@ void sort_nums(){
    //getline(&name, &M, stdin);
    scanf("%S", name);
    UtilFileMappingSortNumsDecrease(name);
+}
+
+
+void arrange_symbols_args(int argc, char *argv[]){
+   if(argc >= 3){
+   wchar_t *name = Char2Wchar(argv[2]);
+   UtilFileMappingArrangeBySymbols(name);
+   free(name);
+   }
+}
+void count_symbols_args(int argc, char *argv[]){
+   if(argc >= 3){
+   wchar_t *name = Char2Wchar(argv[2]);
+   int up = 0, low = 0;
+   UtilFileMappingCalculateSymbols(name, &up, &low);
+   printf("Num of uppers = %d\n Num of lowers = %d\n", up, low);
+   free(name);
+   }
+}
+void delete_symbols_args(int argc, char *argv[]){
+   if(argc >= 3){
+   wchar_t *name = Char2Wchar(argv[2]);
+   UtilFileMappingDeleteStringFromFile(name, "a");
+   free(name);
+   }
+}
+void sort_nums_args(int argc, char *argv[]){
+   if(argc >= 3){
+   wchar_t *name = Char2Wchar(argv[2]);
+   UtilFileMappingSortNumsDecrease(name);
+   free(name);
+   }
 }

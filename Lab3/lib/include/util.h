@@ -3,20 +3,35 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <windows.h>
-void create_file();
-void read_file();
-void delete_file();
-void rename_file();
-void copy_file();
-void get_size();
-void get_attributes();
-void set_attributes();
-void print_folder_content();
+void create_file_dialog();
+void read_file_dialog();
+void delete_file_dialog();
+void rename_file_dialog();
+void copy_file_dialog();
+void get_size_dialog();
+void get_attributes_dialog();
+void set_attributes_dialog();
+void print_folder_content_dialog();
 void print_options();
-void arrange_symbols();
-void count_symbols();
-void delete_symbols();
-void sort_nums();
+void arrange_symbols_dialog();
+void count_symbols_dialog();
+void delete_symbols_dialog();
+void sort_nums_dialog();
+
+
+void create_file_args(int argc, char *argv[]);
+void read_file_args(int argc, char *argv[]);
+void delete_file_args(int argc, char *argv[]);
+void rename_file_args(int argc, char *argv[]);
+void copy_file_args(int argc, char *argv[]);
+void get_size_args(int argc, char *argv[]);
+void get_attributes_args(int argc, char *argv[]);
+void set_attributes_args(int argc, char *argv[]);
+void print_folder_content_args(int argc, char *argv[]);
+void arrange_symbols_args(int argc, char *argv[]);
+void count_symbols_args(int argc, char *argv[]);
+void delete_symbols_args(int argc, char *argv[]);
+void sort_nums_args(int argc, char *argv[]);
 
 ssize_t getline(char **restrict buffer, size_t *restrict size, FILE *restrict fp);
 /**
@@ -36,6 +51,7 @@ void remove_by_index(char *src, int idx);
  * @brief Convert string before first separator to integer
  * @param src source string
  * @param sep separator char
+ * @returns integer
 */
 int atoi_before_sep(const char* src, char sep);
 int int_comparator_decrease(const void *a, const void* b);
