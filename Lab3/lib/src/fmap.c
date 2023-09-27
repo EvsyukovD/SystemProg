@@ -98,6 +98,7 @@ WINBOOL UtilFileMappingCalculateSymbols(const wchar_t *path, int* num_of_uppers,
       SetFilePointer(mapping->hFile, 0, 0, FILE_BEGIN);
       return 0;
    }
+   mapping->hFile = (size_t) GetFileSize(mapping->hFile, 0);
    //sprintf(mapping->dataPtr + strlen(mapping->dataPtr), "%s", buffer);
    //strcat(mapping->dataPtr, buffer);
    SetFilePointer(mapping->hFile, 0, 0, FILE_BEGIN);
