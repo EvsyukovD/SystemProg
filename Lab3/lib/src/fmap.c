@@ -169,7 +169,7 @@ void arrange_symbols_dialog()
    wchar_t name[N];
    puts("Enter file path:");
    // getline(&name, &M, stdin);
-   scanf("%S", name);
+   read(name, N);
    UtilFileMappingArrangeBySymbols(name);
 }
 void count_symbols_dialog()
@@ -178,7 +178,7 @@ void count_symbols_dialog()
    const int M = N - 1;
    wchar_t name[N];
    puts("Enter file path:");
-   scanf("%S", name);
+   read(name, N);
    int up = 0, low = 0;
    UtilFileMappingCalculateSymbols(name, &up, &low);
    printf("Num of uppers = %d\n Num of lowers = %d\n", up, low);
@@ -189,8 +189,7 @@ void delete_symbols_dialog()
    const int M = N - 1;
    wchar_t name[N];
    puts("Enter file path:");
-   // getline(&name, &M, stdin);
-   scanf("%S", name);
+   read(name, N);
    UtilFileMappingDeleteStringFromFile(name, "a");
 }
 void sort_nums_dialog()
@@ -199,8 +198,7 @@ void sort_nums_dialog()
    const int M = N - 1;
    wchar_t name[N];
    puts("Enter file path:");
-   // getline(&name, &M, stdin);
-   scanf("%S", name);
+   read(name, N);
    UtilFileMappingSortNumsDecrease(name);
 }
 

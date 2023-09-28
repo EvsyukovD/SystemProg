@@ -1,9 +1,10 @@
 #include "lib/include/util.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <crtdbg.h>
+#include <locale.h>
 int main(int argc, char *argv[])
 {
+    setlocale(LC_ALL,"");
     void (*fptrs_dialog[])() = {NULL, create_file_dialog, read_file_dialog, delete_file_dialog,
                          rename_file_dialog, copy_file_dialog, get_size_dialog, get_attributes_dialog, 
                          set_attributes_dialog, print_folder_content_dialog,arrange_symbols_dialog,count_symbols_dialog,

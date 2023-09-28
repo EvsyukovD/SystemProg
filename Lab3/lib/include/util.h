@@ -17,7 +17,7 @@ void arrange_symbols_dialog();
 void count_symbols_dialog();
 void delete_symbols_dialog();
 void sort_nums_dialog();
-
+void read(wchar_t* dest, int size);
 
 void create_file_args(int argc, char *argv[]);
 void read_file_args(int argc, char *argv[]);

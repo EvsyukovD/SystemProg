@@ -29,6 +29,10 @@ ssize_t getline(char **restrict buffer, size_t *restrict size,
     }
     return (ssize_t)(*size=strlen(*buffer));
 }
+void read(wchar_t* dest, int size){
+   fflush(stdin);
+   fgetws(dest, size, stdin);
+}
 void PrintLastError()
 {
    //char *desc = NULL;

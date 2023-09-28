@@ -247,10 +247,9 @@ void create_file_dialog()
    wchar_t name[N];
    wchar_t data[N];
    puts("Enter file path:");
-   scanf("%S", name);
-
+   read(name, N);
    puts("Enter data for this file:");
-   scanf("%S", data);
+   read(data, N);
    UtilCreateFile(name, data);
 }
 void read_file_dialog()
@@ -259,8 +258,7 @@ void read_file_dialog()
    const int M = N - 1;
    wchar_t name[N];
    puts("Enter file path:");
-   scanf("%S", name);
-   // getline(&name, &M, stdin);
+   read(name, N);
    wchar_t content[N];
    UtilReadFile(name, content, N);
    printf("Data from file:\n");
@@ -273,8 +271,7 @@ void delete_file_dialog()
    const int M = N - 1;
    wchar_t name[N];
    puts("Enter file path:");
-   scanf("%S", name);
-   // getline(&name, &M, stdin);
+   read(name, N);
    if (UtilDeleteFile(name))
    {
       puts("File is deleted");
@@ -287,11 +284,9 @@ void rename_file_dialog()
    wchar_t old_name[N];
    wchar_t new_name[N];
    puts("Enter old file name:");
-   scanf("%S", old_name);
-   // getline(&old_name, &M, stdin);
+   read(old_name, N);
    puts("Enter new file name:");
-   // getline(&new_name, &M, stdin);
-   scanf("%S", new_name);
+   read(new_name, N);
    if (UtilRenameFile(old_name, new_name))
    {
       printf("File was renamed to %S", new_name);
@@ -304,11 +299,9 @@ void copy_file_dialog()
    wchar_t src[N];
    wchar_t dest[N];
    puts("Enter src file name:");
-   // getline(&src, &M, stdin);
-   scanf("%S", src);
+   read(src, N);
    puts("Enter dest file name:");
-   // getline(&dest, &M, stdin);
-   scanf("%S", dest);
+   read(dest, N);
    UtilCopyFile(src, dest);
 }
 void get_size_dialog()
@@ -317,8 +310,7 @@ void get_size_dialog()
    const int M = N - 1;
    wchar_t name[N];
    puts("Enter file path:");
-   // getline(&name, &M, stdin);
-   scanf("%S", name);
+   read(name, N);
    DWORD res = UtilGetSizeOfFile(name);
    printf("Size of this file: %ld bytes\n", res);
 }
@@ -329,7 +321,7 @@ void get_attributes_dialog()
    wchar_t name[N];
    puts("Enter file path:");
    // getline(&name, &M, stdin);
-   scanf("%S", name);
+   read(name, N);
    DWORD attributes = UtilGetFileAttributes(name);
    printf("File attributes for file %S:\n", name);
    PrintFileAttributes(attributes);
@@ -341,7 +333,7 @@ void set_attributes_dialog()
    wchar_t name[N];
    puts("Enter file path:");
    // getline(&name, &M, stdin);
-   scanf("%S", name);
+   read(name, N);
    puts("Make readonly (type 1) file or hidden (type 0):");
    int type = 0;
    scanf("%d", &type);
@@ -365,7 +357,7 @@ void print_folder_content_dialog()
    wchar_t root[N];
    puts("Enter root path:");
    // getline(&root, &M, stdin);
-   scanf("%S", root);
+   read(root, N);
    UtilPrintFolderContent(root);
 }
 
