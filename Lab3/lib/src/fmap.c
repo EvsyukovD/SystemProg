@@ -102,8 +102,6 @@ WINBOOL UtilFileMappingCalculateSymbols(const wchar_t *path, int *num_of_uppers,
       return 0;
    }
    mapping->hFile = (size_t)GetFileSize(mapping->hFile, 0);
-   // sprintf(mapping->dataPtr + strlen(mapping->dataPtr), "%s", buffer);
-   // strcat(mapping->dataPtr, buffer);
    SetFilePointer(mapping->hFile, 0, 0, FILE_BEGIN);
    UtilReleaseFileMapping(mapping);
    *num_of_lows = lows;
@@ -168,7 +166,6 @@ void arrange_symbols_dialog()
    const int M = N - 1;
    wchar_t name[N];
    puts("Enter file path:");
-   // getline(&name, &M, stdin);
    read(name, N);
    UtilFileMappingArrangeBySymbols(name);
 }

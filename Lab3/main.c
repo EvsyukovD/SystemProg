@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
        }
        
        res = atoi(argv[1]);
-       if(res){
+       if(res > 0 && res < size){
           fptrs_args[res](argc, argv);
           return 0;
        } else {
