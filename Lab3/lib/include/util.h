@@ -63,10 +63,10 @@ int atoi_before_sep(const char* src, char sep);
 int int_comparator_decrease(const void *a, const void* b);
 
 typedef struct {
-  HANDLE hFile;
-  HANDLE hMapping;
-  size_t fsize;
-  char* dataPtr;
+  HANDLE hFile; //handle of file
+  HANDLE hMapping; //handle for file mapping
+  size_t fsize; //size of file
+  char* dataPtr; //content of file 
 } FileMapping;
 /**
  * @brief Convert bytes with separators to integers

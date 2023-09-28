@@ -139,8 +139,8 @@ int* convert_bytes_to_i(const char* bytes, int* size, char sep){
 }
 void print_options()
 {
-   char *options[] = {"0.Quit", "1.Create file [path content]", "2.Read file [path]", "3.Delete file [path]", "4.Rename file [old_name new_name]",
-                      "5.Copy file [src dest]",
+   char *options[] = {"0.Quit", "1.Create file [path] [content]", "2.Read file [path]", "3.Delete file [path]", "4.Rename file [old_name] [new_name]",
+                      "5.Copy file [src] [dest]",
                       "6.Get size of file [path]", "7.Get file attributes [path]", "8.Set attributes [path]", "9.Print folder content recursively [root]",
                       "10.Arrange symbols [path]", "11.Count symbols [path]", "12.Delete symbols [path]", "13.Sort nums [path]"};
    int options_num = sizeof(options) / sizeof(options[0]);
