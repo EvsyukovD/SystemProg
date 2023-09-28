@@ -1,4 +1,3 @@
-#define _CRTDBG_MAP_ALLOC
 #include "lib/include/util.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,9 +48,5 @@ int main(int argc, char *argv[])
             return 0;
         }
     }
-    // const char *name = "C:\\Users\\devsy\\Desktop\\SysProg\\Lab3\\test\\file.txt";
-    // const char *new_name = "C:\\Users\\devsy\\Desktop\\SysProg\\Lab3\\test\\file3.txt";
-    // const char *folder = "C:\\Users\\devsy\\Desktop\\SysProg\\Lab3";
-    //_CrtDumpMemoryLeaks();
     return 0;
 }

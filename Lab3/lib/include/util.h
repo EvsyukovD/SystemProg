@@ -54,6 +54,12 @@ void remove_by_index(char *src, int idx);
  * @returns integer
 */
 int atoi_before_sep(const char* src, char sep);
+/**
+ * @brief Comparator of integers for decrease for qsort function
+ * @param a first int pointer
+ * @param b second int pointer
+ * @return b - a
+*/
 int int_comparator_decrease(const void *a, const void* b);
 
 typedef struct {
@@ -62,9 +68,25 @@ typedef struct {
   size_t fsize;
   char* dataPtr;
 } FileMapping;
-
+/**
+ * @brief Convert bytes with separators to integers
+ * @param bytes source string
+ * @param size number of bytes
+ * @param sep separator char
+ * @returns int array pointer
+*/
 int* convert_bytes_to_i(const char* bytes, int* size, char sep);
+/**
+ * @brief Convert char to wchar
+ * @param src source char string
+ * @returns wchar array
+*/
 wchar_t* Char2Wchar(const char *);
+/**
+ * @brief Convert wchar to char
+ * @param src source wchar string
+ * @returns char array
+*/
 char* Wchar2Char(const wchar_t*);
 void PrintLastError();
 void PrintFileAttributes(DWORD attributes);

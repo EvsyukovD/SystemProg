@@ -248,12 +248,9 @@ void create_file_dialog()
    wchar_t data[N];
    puts("Enter file path:");
    scanf("%S", name);
-   //getline(&name, &M, stdin);
-   puts("Enter data for this file:");
-   // note: use getline
-   scanf("%S", data);
-   //getline(&data, &M, stdin);
 
+   puts("Enter data for this file:");
+   scanf("%S", data);
    UtilCreateFile(name, data);
 }
 void read_file_dialog()
@@ -263,7 +260,7 @@ void read_file_dialog()
    wchar_t name[N];
    puts("Enter file path:");
    scanf("%S", name);
-   //getline(&name, &M, stdin);
+   // getline(&name, &M, stdin);
    wchar_t content[N];
    UtilReadFile(name, content, N);
    printf("Data from file:\n");
@@ -276,8 +273,8 @@ void delete_file_dialog()
    const int M = N - 1;
    wchar_t name[N];
    puts("Enter file path:");
-  scanf("%S", name);
-  // getline(&name, &M, stdin);
+   scanf("%S", name);
+   // getline(&name, &M, stdin);
    if (UtilDeleteFile(name))
    {
       puts("File is deleted");
@@ -291,9 +288,9 @@ void rename_file_dialog()
    wchar_t new_name[N];
    puts("Enter old file name:");
    scanf("%S", old_name);
-   //getline(&old_name, &M, stdin);
+   // getline(&old_name, &M, stdin);
    puts("Enter new file name:");
-   //getline(&new_name, &M, stdin);
+   // getline(&new_name, &M, stdin);
    scanf("%S", new_name);
    if (UtilRenameFile(old_name, new_name))
    {
@@ -307,10 +304,10 @@ void copy_file_dialog()
    wchar_t src[N];
    wchar_t dest[N];
    puts("Enter src file name:");
-   //getline(&src, &M, stdin);
+   // getline(&src, &M, stdin);
    scanf("%S", src);
    puts("Enter dest file name:");
-   //getline(&dest, &M, stdin);
+   // getline(&dest, &M, stdin);
    scanf("%S", dest);
    UtilCopyFile(src, dest);
 }
@@ -320,7 +317,7 @@ void get_size_dialog()
    const int M = N - 1;
    wchar_t name[N];
    puts("Enter file path:");
-   //getline(&name, &M, stdin);
+   // getline(&name, &M, stdin);
    scanf("%S", name);
    DWORD res = UtilGetSizeOfFile(name);
    printf("Size of this file: %ld bytes\n", res);
@@ -331,7 +328,7 @@ void get_attributes_dialog()
    const int M = N - 1;
    wchar_t name[N];
    puts("Enter file path:");
-   //getline(&name, &M, stdin);
+   // getline(&name, &M, stdin);
    scanf("%S", name);
    DWORD attributes = UtilGetFileAttributes(name);
    printf("File attributes for file %S:\n", name);
@@ -343,7 +340,7 @@ void set_attributes_dialog()
    const int M = N - 1;
    wchar_t name[N];
    puts("Enter file path:");
-   //getline(&name, &M, stdin);
+   // getline(&name, &M, stdin);
    scanf("%S", name);
    puts("Make readonly (type 1) file or hidden (type 0):");
    int type = 0;
@@ -367,28 +364,23 @@ void print_folder_content_dialog()
    const int M = N - 1;
    wchar_t root[N];
    puts("Enter root path:");
-   //getline(&root, &M, stdin);
+   // getline(&root, &M, stdin);
    scanf("%S", root);
    UtilPrintFolderContent(root);
 }
-void print_options()
-{
-   char *options[] = {"0.Quit", "1.Create file", "2.Read file", "3.Delete file", "4.Rename file", "5.Copy file",
-                      "6.Get size of file", "7.Get file attributes", "8.Set attributes", "9.Print folder content recursively",
-                      "10.Arrange symbols","11.Count symbols","12.Delete symbols","13.Sort nums"};
-   int options_num = sizeof(options) / sizeof(options[0]);
-   for (int i = 0; i < options_num; i++)
-   {
-      printf("%s\n", options[i]);
-   }
-}
-
 
 void create_file_args(int argc, char *argv[])
 {
-   if(argc >= 4){
+   if (argc >= 4)
+   {
       wchar_t *name = Char2Wchar(argv[2]);
       wchar_t *data = Char2Wchar(argv[3]);
+      if (!name || !data)
+      {
+         free(name);
+         free(data);
+         return;
+      }
       UtilCreateFile(name, data);
       free(name);
       free(data);
@@ -396,57 +388,85 @@ void create_file_args(int argc, char *argv[])
 }
 void read_file_args(int argc, char *argv[])
 {
-   if(argc >= 3){
-   const int N = 1024;
-   wchar_t *name = Char2Wchar(argv[2]);
-   wchar_t content[N];
-   UtilReadFile(name, content, N);
-   printf("Data from file:\n");
-   printf("%S", content);
-   puts("");
-   free(name);
+   if (argc >= 3)
+   {
+      const int N = 1024;
+      wchar_t *name = Char2Wchar(argv[2]);
+      if (!name)
+      {
+         return;
+      }
+      wchar_t content[N];
+      UtilReadFile(name, content, N);
+      printf("Data from file:\n");
+      printf("%S", content);
+      puts("");
+      free(name);
    }
 }
 void delete_file_args(int argc, char *argv[])
 {
-   if(argc >= 2){
-   wchar_t *name = Char2Wchar(argv[2]);
-   if (UtilDeleteFile(name))
+   if (argc >= 2)
    {
-      puts("File is deleted");
-   }
-   free(name);
+      wchar_t *name = Char2Wchar(argv[2]);
+      if (!name)
+      {
+         return;
+      }
+      if (UtilDeleteFile(name))
+      {
+         puts("File is deleted");
+      }
+      free(name);
    }
 }
 void rename_file_args(int argc, char *argv[])
 {
-   if(argc >= 4){
-   
-   wchar_t *old_name = Char2Wchar(argv[2]);
-   wchar_t *new_name = Char2Wchar(argv[3]);
-
-   if (UtilRenameFile(old_name, new_name))
+   if (argc >= 4)
    {
-      printf("File was renamed to %S", new_name);
-   }
-   free(old_name);
-   free(new_name);
+
+      wchar_t *old_name = Char2Wchar(argv[2]);
+      wchar_t *new_name = Char2Wchar(argv[3]);
+      if (!old_name || !new_name)
+      {
+         free(old_name);
+         free(new_name);
+         return;
+      }
+      if (UtilRenameFile(old_name, new_name))
+      {
+         printf("File was renamed to %S", new_name);
+      }
+      free(old_name);
+      free(new_name);
    }
 }
 void copy_file_args(int argc, char *argv[])
 {
-   if(argc >= 4){
-   wchar_t *src = Char2Wchar(argv[2]);
-   wchar_t *dest = Char2Wchar(argv[3]);
-   UtilCopyFile(src, dest);
-   free(src);
-   free(dest);
+   if (argc >= 4)
+   {
+      wchar_t *src = Char2Wchar(argv[2]);
+      wchar_t *dest = Char2Wchar(argv[3]);
+      if (!src || !dest)
+      {
+         free(src);
+         free(dest);
+         return;
+      }
+      UtilCopyFile(src, dest);
+      free(src);
+      free(dest);
    }
 }
 void get_size_args(int argc, char *argv[])
 {
-   if(argc >= 3){
+   if (argc >= 3)
+   {
       wchar_t *name = Char2Wchar(argv[2]);
+      if (!name)
+      {
+         return;
+      }
       DWORD res = UtilGetSizeOfFile(name);
       printf("Size of this file: %ld bytes\n", res);
       free(name);
@@ -454,41 +474,61 @@ void get_size_args(int argc, char *argv[])
 }
 void get_attributes_args(int argc, char *argv[])
 {
-   if(argc >= 3){
-   wchar_t *name = Char2Wchar(argv[2]);
-   DWORD attributes = UtilGetFileAttributes(name);
-   printf("File attributes for file %S:\n", name);
-   PrintFileAttributes(attributes);
-   free(name);
+   if (argc >= 3)
+   {
+      wchar_t *name = Char2Wchar(argv[2]);
+      if (!name)
+      {
+         return;
+      }
+      DWORD attributes = UtilGetFileAttributes(name);
+      printf("File attributes for file %S:\n", name);
+      PrintFileAttributes(attributes);
+      free(name);
    }
 }
 void set_attributes_args(int argc, char *argv[])
 {
-   if(argc >= 3){
-   wchar_t *name = Char2Wchar(argv[2]);
-   puts("Make readonly (type 1) file or hidden (type 0):");
-   int type = 0;
-   scanf("%d", &type);
-   DWORD attributes = UtilGetFileAttributes(name);
-   switch (type)
+   if (argc >= 3)
    {
-   case 1:
-      UtilSetFileAttributes(name, attributes | FILE_ATTRIBUTE_READONLY);
-      break;
-   case 0:
-      UtilSetFileAttributes(name, attributes | FILE_ATTRIBUTE_HIDDEN);
-      break;
-   default:
-      break;
-   }
-   free(name);
+      puts("Make readonly (type 1) file or hidden (type 0):");
+      int type = 0;
+      int n = scanf("%d", &type);
+      if (!n)
+      {
+         printf("Not int value\n");
+         return;
+      }
+      wchar_t *name = Char2Wchar(argv[2]);
+      if (!name)
+      {
+         return;
+      }
+      DWORD attributes = UtilGetFileAttributes(name);
+      switch (type)
+      {
+      case 1:
+         UtilSetFileAttributes(name, attributes | FILE_ATTRIBUTE_READONLY);
+         break;
+      case 0:
+         UtilSetFileAttributes(name, attributes | FILE_ATTRIBUTE_HIDDEN);
+         break;
+      default:
+         break;
+      }
+      free(name);
    }
 }
 void print_folder_content_args(int argc, char *argv[])
 {
-   if(argc >= 3){
-   wchar_t *root = Char2Wchar(argv[2]);
-   UtilPrintFolderContent(root);
-   free(root);
+   if (argc >= 3)
+   {
+      wchar_t *root = Char2Wchar(argv[2]);
+      if (!root)
+      {
+         return;
+      }
+      UtilPrintFolderContent(root);
+      free(root);
    }
 }
