@@ -8,7 +8,15 @@ typedef struct {
   HMODULE hmod;
 } UtilProcessInfo;
 void UtilReleaseProcessInfo(UtilProcessInfo*);
-int UtilCreateProcess(int argc, TCHAR *argv[]);
-WINBOOL UtilGetCurrentProcesses(DWORD *aProcesses, DWORD *num_of_procs);
+void UtilCreateProcess(TCHAR *path);
+WINBOOL UtilGetCurrentProcesses(DWORD *aProcesses, DWORD *num_of_procs, int size);
 void PrintUtilProcessInfo(DWORD processID);
+void UtilCreateRandomThreads();
+void UtilPEBInformation(DWORD Pid);
+
+void create_process_args(int argc, TCHAR *argv[]);
+void print_processes_args(int argc, TCHAR *argv[]);
+void create_random_args(int argc, TCHAR *argv[]);
+void print_peb_info_args(int argc, TCHAR *argv[]);
+void print_options();
 #endif
