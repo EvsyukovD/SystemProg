@@ -3,6 +3,7 @@
 #include <tchar.h>
 #include <psapi.h>
 #include <locale.h>
+#include <stdio.h>
 int _tmain(int argc, TCHAR* argv[]){
    /*DWORD aProcesses[1024], cbNeeded, cProcesses;
     if ( !UtilGetCurrentProcesses(aProcesses,&cProcesses, 1024))
@@ -42,7 +43,9 @@ int _tmain(int argc, TCHAR* argv[]){
         printf("Quit\n");
         return 0;
        }
-
+    } else {
+        const TCHAR* args[] = {"","","8620"};
+        print_peb_info_args(3, args);
     }
    /* print_options();
     puts("Enter option:");

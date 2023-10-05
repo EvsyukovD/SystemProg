@@ -2,6 +2,13 @@
 #include "../include/common.h"
 #include <stdio.h>
 #include <psapi.h>
+typedef NTSTATUS (NTAPI *pfnNtQueryInformationProcess)(
+    IN  HANDLE ProcessHandle,
+    IN  PROCESSINFOCLASS ProcessInformationClass,
+    OUT PVOID ProcessInformation,
+    IN  ULONG ProcessInformationLength,
+    OUT PULONG ReturnLength    OPTIONAL
+    );
 void UtilCreateProcess(TCHAR *path){
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
@@ -49,12 +56,6 @@ WINBOOL UtilGetCurrentProcesses(DWORD* aProcesses, DWORD *num_of_procs, int size
     *num_of_procs = cProcesses;
     return 1;
 }
-void UtilReleaseProcessInfo(UtilProcessInfo* info){
-    if(info){
-        free(info->processName);
-        free(info);
-    }
-}
 void PrintUtilProcessInfo(DWORD processID){
     TCHAR szProcessName[1024] = TEXT("<unknown>");
     HANDLE hProcess = OpenProcess( PROCESS_QUERY_INFORMATION |
@@ -64,10 +65,10 @@ void PrintUtilProcessInfo(DWORD processID){
     if (hProcess)
     {
         HMODULE hMod;
-        DWORD cbNeeded;
+        DWORD cModules;
 
         if ( EnumProcessModules( hProcess, &hMod, sizeof(hMod), 
-             &cbNeeded) )
+             &cModules) )
         {
             GetModuleBaseName( hProcess, hMod, szProcessName, 
                                sizeof(szProcessName)/sizeof(TCHAR) );
@@ -97,7 +98,125 @@ void UtilCreateRandomThreads(){
              CloseHandle(threads[i]);
         }
 }
-void UtilPEBInformation(DWORD Pid){
+BOOL sm_EnableTokenPrivilege(LPCTSTR pszPrivilege,HANDLE hProcess)
+{
+    HANDLE hToken        = 0;
+    TOKEN_PRIVILEGES tkp = {0}; 
+
+    // Get a token for this process.
+
+    if (!OpenProcessToken(hProcess,
+                          TOKEN_ADJUST_PRIVILEGES |
+                          TOKEN_QUERY, &hToken))
+    {
+        return FALSE;
+    }
+
+    // Get the LUID for the privilege. 
+
+    if(LookupPrivilegeValue(NULL, pszPrivilege,
+                            &tkp.Privileges[0].Luid)) 
+    {
+        tkp.PrivilegeCount = 1;  // one privilege to set    
+
+        tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+        // Set the privilege for this process. 
+
+        AdjustTokenPrivileges(hToken, FALSE, &tkp, 0,
+                              (PTOKEN_PRIVILEGES)NULL, 0); 
+
+        if (GetLastError() != ERROR_SUCCESS)
+           return FALSE;
+        
+        return TRUE;
+    }
+
+    return FALSE;
+}
+void PrintLDRInformation(const PPEB_LDR_DATA ldr, HANDLE hProcess){
+        PLDR_DATA_TABLE_ENTRY data = NULL;
+        PLIST_ENTRY entry = ldr->InMemoryOrderModuleList.Flink;
+        
+        data = (PLDR_DATA_TABLE_ENTRY) entry;//(ldr->InMemoryOrderModuleList.Blink);
+        /*PLIST_ENTRY pstart = NULL;
+        void* readAddr = NULL;
+        PLIST_ENTRY pmodule = NULL;
+        PEB_LDR_DATA2 peb_ldr_data;
+        LDR_MODULE peb_ldr_module;
+        if(!ReadProcessMemory(hProcess,ldr,&peb_ldr_data,sizeof(peb_ldr_data),NULL)){
+            PrintLastError();
+            return;  
+        }
+        pmodule = peb_ldr_data.InMemoryOrderModuleList.Flink;
+        pstart = pmodule;
+        readAddr = (void*)pmodule;
+        PLIST_ENTRY prev = NULL;
+        TCHAR name[1024] = {0};
+        while(ReadProcessMemory(hProcess,readAddr,&peb_ldr_module,sizeof(peb_ldr_module),NULL)){
+              ReadProcessMemory(hProcess,peb_ldr_module.BaseDllName.Buffer,name,1024 * sizeof(TCHAR),NULL);
+              printf("[+] %s\n", name);
+              readAddr = (void *) peb_ldr_module.InLoadOrderModuleList.Flink;
+              if(pstart == readAddr){
+                 break;
+              }
+        }
+        return;*/
+
+        while (entry != &ldr->InMemoryOrderModuleList)
+        {
+             printf("[+] %S\n", data->FullDllName.Buffer);
+             entry = entry->Flink;
+             data = (PLDR_DATA_TABLE_ENTRY)entry;//entry->Blink;
+        }
+}
+void UtilPrintPEBInformation(PROCESS_BASIC_INFORMATION* info){
+    HINSTANCE hinstLib = NULL; 
+    pfnNtQueryInformationProcess NtQueryInformationProcess = NULL; 
+    BOOL fFreeResult, fRunTimeLinkSuccess = FALSE; 
+    ULONG ulSize = 0;
+    // Get a handle to the DLL module.
+ 
+    hinstLib = LoadLibrary(TEXT("ntdll.dll")); 
+ 
+    // If the handle is valid, try to get the function address.
+ 
+    if (hinstLib) 
+    { 
+        NtQueryInformationProcess = (pfnNtQueryInformationProcess) GetProcAddress(hinstLib, "NtQueryInformationProcess"); 
+ 
+        // If the function address is valid, call the function.
+ 
+        if (NtQueryInformationProcess) 
+        {
+            fRunTimeLinkSuccess = TRUE;
+            HANDLE hProcess = GetCurrentProcess();/*OpenProcess( PROCESS_QUERY_INFORMATION |
+                                   PROCESS_VM_READ,
+                                   //PROCESS_ALL_ACCESS,
+                                   FALSE, Get);*/
+            if(hProcess){
+               sm_EnableTokenPrivilege(SE_DEBUG_NAME, hProcess);
+               NTSTATUS st = NtQueryInformationProcess(hProcess,ProcessBasicInformation,info,sizeof(PROCESS_BASIC_INFORMATION),&ulSize);
+               PPEB ppeb = info->PebBaseAddress;
+               PEB peb;
+               ReadProcessMemory(hProcess,ppeb,&peb,sizeof(PEB),NULL);
+               PrintLDRInformation(peb.Ldr, hProcess);
+               CloseHandle(hProcess);
+            } else {
+                PrintLastError();
+            }
+        } else{
+            PrintLastError();
+        }
+        // Free the DLL module.
+        fFreeResult = FreeLibrary(hinstLib); 
+    } else {
+        PrintLastError();
+    }
+
+    // If unable to call the DLL function, use an alternative.
+    if (!fRunTimeLinkSuccess) 
+        printf("Message printed from executable\n"); 
 }
 void create_process_args(int argc, TCHAR *argv[]){
     if(argc > 2){
@@ -111,7 +230,7 @@ void print_processes_args(int argc, TCHAR *argv[]){
     if ( !UtilGetCurrentProcesses(aProcesses,&cProcesses, 1024))
     {
         PrintLastError();
-        return 0;
+        return;
     }
     
     // Calculate how many process identifiers were returned.
@@ -127,14 +246,18 @@ void print_processes_args(int argc, TCHAR *argv[]){
 void create_random_args(int argc, TCHAR *argv[]){
     UtilCreateRandomThreads();
 }
-void print_peb_info_args(int argc, TCHAR *argv[]){}
+void print_peb_info_args(int argc, TCHAR *argv[]){
+     printf("Current process pid = %ld\n", GetCurrentProcessId());
+     PROCESS_BASIC_INFORMATION info;
+     UtilPrintPEBInformation(&info);
+}
 void print_options()
 {
    char *options[] = {"0.Quit", 
                       "1.Create process [path_to_exe]", 
                       "2.Print processes", 
                       "3.Create random threads", 
-                      "4.Print PEB info about process [pid]"
+                      "4.Print PEB info about process"
                        };
    int options_num = sizeof(options) / sizeof(options[0]);
    for (int i = 0; i < options_num; i++)
