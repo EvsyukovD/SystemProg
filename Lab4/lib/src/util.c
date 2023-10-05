@@ -154,7 +154,7 @@ void print_peb_info_args(int argc, TCHAR *argv[]){
 void print_extended_process_info_args(int argc, TCHAR* argv[]){
     if(argc > 2) {
        DWORD pid = atoll(argv[2]);
-       PrintExtendedProcessInfo(pid);
+       PrintExtendedProcessInfo(GetCurrentProcessId());
     }
 }
 void print_options()
@@ -163,7 +163,7 @@ void print_options()
                       "1.Create process [path_to_exe]", 
                       "2.Print processes", 
                       "3.Create random threads", 
-                      "4.Print PEB info about process",
+                      "4.Print PEB info about current process",
                       "5.Print extended info about process [pid]"
                        };
    int options_num = sizeof(options) / sizeof(options[0]);
