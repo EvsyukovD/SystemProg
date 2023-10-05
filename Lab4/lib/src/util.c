@@ -152,8 +152,7 @@ void print_extended_process_info_args(int argc, TCHAR* argv[]){
 }
 void print_options()
 {
-   char *options[] = {"0.Quit", 
-                      "1.Create process [path_to_exe]", 
+   char *options[] = {"1.Create process [path_to_exe]", 
                       "2.Print processes", 
                       "3.Create random threads", 
                       "4.Print PEB info about current process",

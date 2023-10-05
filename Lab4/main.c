@@ -7,7 +7,7 @@
 int _tmain(int argc, TCHAR* argv[]){
     setlocale(LC_ALL,"");
     void (*fptrs_args[])(int, TCHAR*) = {NULL, create_process_args, print_processes_args, create_random_args,
-                         print_peb_info_args,print_extended_process_info_args};
+                         print_peb_info_args, print_extended_process_info_args};
     int res = 0;
     int size = sizeof(fptrs_args) / sizeof(fptrs_args[1]);
     if(argc > 1){
