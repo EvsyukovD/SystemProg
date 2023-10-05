@@ -5,27 +5,9 @@
 #include <locale.h>
 #include <stdio.h>
 int _tmain(int argc, TCHAR* argv[]){
-   /*DWORD aProcesses[1024], cbNeeded, cProcesses;
-    if ( !UtilGetCurrentProcesses(aProcesses,&cProcesses, 1024))
-    {
-        PrintLastError();
-        return 0;
-    }
-    
-    // Calculate how many process identifiers were returned.
-    // Print the name and process identifier for each process.
-    for (DWORD i = 0; i < cProcesses; i++ )
-    {
-        if( aProcesses[i] != 0 )
-        {
-            PrintUtilProcessInfo(aProcesses[i]);
-        }
-    }
-    printf("cProc = %d\n",cProcesses);
-    UtilCreateRandomThreads();*/
     setlocale(LC_ALL,"");
     void (*fptrs_args[])(int, TCHAR*) = {NULL, create_process_args, print_processes_args, create_random_args,
-                         print_peb_info_args};
+                         print_peb_info_args,print_extended_process_info_args};
     int res = 0, n = 0;
     int size = sizeof(fptrs_args) / sizeof(fptrs_args[1]);
     if(argc > 1){
