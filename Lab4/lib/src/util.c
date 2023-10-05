@@ -77,7 +77,6 @@ void UtilCreateRandomThreads(){
 void UtilPrintPEBInformation(PROCESS_BASIC_INFORMATION* info){
     HINSTANCE hinstLib = NULL; 
     pfnNtQueryInformationProcess NtQueryInformationProcess = NULL; 
-    BOOL fFreeResult, fRunTimeLinkSuccess = FALSE; 
     ULONG ulSize = 0;
     // Get a handle to the DLL module.
  
@@ -93,7 +92,6 @@ void UtilPrintPEBInformation(PROCESS_BASIC_INFORMATION* info){
  
         if (NtQueryInformationProcess) 
         {
-            fRunTimeLinkSuccess = TRUE;
             HANDLE hProcess = GetCurrentProcess();
             if(hProcess){
                sm_EnableTokenPrivilege(SE_DEBUG_NAME, hProcess);
@@ -110,14 +108,10 @@ void UtilPrintPEBInformation(PROCESS_BASIC_INFORMATION* info){
             PrintLastError();
         }
         // Free the DLL module.
-        fFreeResult = FreeLibrary(hinstLib); 
+        FreeLibrary(hinstLib); 
     } else {
         PrintLastError();
     }
-
-    // If unable to call the DLL function, use an alternative.
-    if (!fRunTimeLinkSuccess) 
-        printf("Message printed from executable\n"); 
 }
 void create_process_args(int argc, TCHAR *argv[]){
     if(argc > 2){
@@ -136,10 +130,9 @@ void print_processes_args(int argc, TCHAR *argv[]){
     
     for (DWORD i = 0; i < cProcesses; i++ )
     {
-        if( aProcesses[i] != 0 )
+        if(aProcesses[i])
         {
             PrintUtilProcessInfo(aProcesses[i]);
-            //PrintUtilProcessExtendedInfo(aProcesses[i]);
         }
     }
 }
@@ -154,7 +147,7 @@ void print_peb_info_args(int argc, TCHAR *argv[]){
 void print_extended_process_info_args(int argc, TCHAR* argv[]){
     if(argc > 2) {
        DWORD pid = atoll(argv[2]);
-       PrintExtendedProcessInfo(GetCurrentProcessId());
+       PrintExtendedProcessInfo(pid);
     }
 }
 void print_options()
