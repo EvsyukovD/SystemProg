@@ -1,0 +1,5 @@
+project(ThreadUtil)
+include_directories(lib/include)
+add_subdirectory(lib)
+add_executable(ThreadUtil main.c)
+target_link_libraries(ThreadUtil ThreadLIB)
