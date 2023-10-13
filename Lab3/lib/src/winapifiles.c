@@ -22,6 +22,7 @@ WINBOOL UtilCreateFile(const wchar_t *name, const wchar_t *data)
    WINBOOL res = WriteFile(file, data, len, &written_bytes, NULL);
    if (!res)
    {
+      CloseHandle(file);
       PrintLastError();
       return res;
    }
@@ -243,7 +244,6 @@ WINBOOL UtilPrintFolderContent(const wchar_t *path)
 void create_file_dialog()
 {
    const int N = 1024;
-   const int M = N - 1;
    wchar_t name[N];
    wchar_t data[N];
    puts("Enter file path:");
@@ -255,7 +255,6 @@ void create_file_dialog()
 void read_file_dialog()
 {
    const int N = 1024;
-   const int M = N - 1;
    wchar_t name[N];
    puts("Enter file path:");
    read(name, N);
@@ -268,7 +267,6 @@ void read_file_dialog()
 void delete_file_dialog()
 {
    const int N = 1024;
-   const int M = N - 1;
    wchar_t name[N];
    puts("Enter file path:");
    read(name, N);
@@ -280,7 +278,6 @@ void delete_file_dialog()
 void rename_file_dialog()
 {
    const int N = 1024;
-   const int M = N - 1;
    wchar_t old_name[N];
    wchar_t new_name[N];
    puts("Enter old file name:");
@@ -295,7 +292,6 @@ void rename_file_dialog()
 void copy_file_dialog()
 {
    const int N = 1024;
-   const int M = N - 1;
    wchar_t src[N];
    wchar_t dest[N];
    puts("Enter src file name:");
@@ -307,7 +303,6 @@ void copy_file_dialog()
 void get_size_dialog()
 {
    const int N = 1024;
-   const int M = N - 1;
    wchar_t name[N];
    puts("Enter file path:");
    read(name, N);
@@ -317,7 +312,6 @@ void get_size_dialog()
 void get_attributes_dialog()
 {
    const int N = 1024;
-   const int M = N - 1;
    wchar_t name[N];
    puts("Enter file path:");
    // getline(&name, &M, stdin);
@@ -329,7 +323,6 @@ void get_attributes_dialog()
 void set_attributes_dialog()
 {
    const int N = 1024;
-   const int M = N - 1;
    wchar_t name[N];
    puts("Enter file path:");
    // getline(&name, &M, stdin);
@@ -353,7 +346,6 @@ void set_attributes_dialog()
 void print_folder_content_dialog()
 {
    const int N = 1024;
-   const int M = N - 1;
    wchar_t root[N];
    puts("Enter root path:");
    // getline(&root, &M, stdin);

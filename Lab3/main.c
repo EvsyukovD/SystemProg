@@ -27,6 +27,7 @@ int main(int argc, char *argv[])
           fptrs_args[res](argc, argv);
           return 0;
        } else {
+        printf("Quit\n");
         return 0;
        }
 

@@ -72,6 +72,7 @@ WINBOOL UtilFileMappingArrangeBySymbols(const wchar_t *path)
 }
 WINBOOL UtilFileMappingCalculateSymbols(const wchar_t *path, int *num_of_uppers, int *num_of_lows)
 {
+   const int N = 10;
    char buffer[10] = {0};
    FileMapping *mapping = UtilGetFileMapping(path);
    if (!mapping)
@@ -91,7 +92,7 @@ WINBOOL UtilFileMappingCalculateSymbols(const wchar_t *path, int *num_of_uppers,
          lows++;
       }
    }
-   itoa(uppers + lows, buffer, 10);
+   itoa(uppers + lows, buffer, N);
    int len = strlen(buffer), written_bytes = 0;
    SetFilePointer(mapping->hFile, 0, 0, FILE_END);
    int res = WriteFile(mapping->hFile, buffer, len, &written_bytes, NULL);
@@ -99,6 +100,7 @@ WINBOOL UtilFileMappingCalculateSymbols(const wchar_t *path, int *num_of_uppers,
    {
       PrintLastError();
       SetFilePointer(mapping->hFile, 0, 0, FILE_BEGIN);
+      UtilReleaseFileMapping(mapping);
       return 0;
    }
    mapping->hFile = (size_t)GetFileSize(mapping->hFile, 0);
@@ -172,7 +174,6 @@ void arrange_symbols_dialog()
 void count_symbols_dialog()
 {
    const int N = 1024;
-   const int M = N - 1;
    wchar_t name[N];
    puts("Enter file path:");
    read(name, N);
@@ -183,7 +184,6 @@ void count_symbols_dialog()
 void delete_symbols_dialog()
 {
    const int N = 1024;
-   const int M = N - 1;
    wchar_t name[N];
    puts("Enter file path:");
    read(name, N);
