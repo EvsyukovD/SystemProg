@@ -1,5 +1,6 @@
 #include "../include/list.h"
 #include <stdlib.h>
+#include <stdio.h>
 	 LinkedList* CreateList() {
 		return (LinkedList*)calloc(1,sizeof(LinkedList));
 	 }

@@ -1,6 +1,5 @@
 #ifndef LIST_H
 #define LIST_H
-#include <stdio.h>
 	//List element structure
 	typedef struct Item {
 		void* data;
