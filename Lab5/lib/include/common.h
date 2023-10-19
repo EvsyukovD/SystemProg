@@ -4,5 +4,8 @@
 #include <windows.h>
 void PrintLastError();
 HANDLE UtilGetFileHandle(const char *path);
+/**
+ * Thread secure print. Arguments the same as for printf
+*/
 void SecurePrint(const char* format,...);
 #endif

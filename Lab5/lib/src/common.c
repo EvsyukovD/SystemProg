@@ -9,10 +9,6 @@ HANDLE UtilGetFileHandle(const char *path)
    HANDLE hFile = CreateFile(path, FILE_GENERIC_READ | FILE_GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ, NULL,
                               OPEN_EXISTING,
                               FILE_ATTRIBUTE_NORMAL, NULL);
-   if (hFile == INVALID_HANDLE_VALUE)
-   {
-      return NULL;
-   }
    /*
    DWORD dwFileSize = GetFileSize(hFile, 0);
    if (dwFileSize == INVALID_FILE_SIZE)

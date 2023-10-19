@@ -12,8 +12,8 @@ extern LinkedList* globalList;
 LinkedList* GetGlobalList();
 LinkedList* InitGlobalList();
 void EraseGlobalList(void (*ReleaseData)(void *));
-int AddDataToGlobalList(int millis);
-int TakeDataFromGlobalList(int millis);
+int AddDataToGlobalList(LPVOID);
+int TakeDataFromGlobalList(LPVOID);
 
 int InitRWContext(int argc,char* argv[]);
 void DeInitializeRWContext();

@@ -12,16 +12,16 @@ WINBOOL finishProduceAndConsume = 0;
 LinkedList* globalList = NULL;
 
 HANDLE hFile = NULL;
-HANDLE semOutput = NULL;
-HANDLE semRCounter = NULL;
-HANDLE semFile = NULL;
+HANDLE semOutput = NULL;//semaphore for stdout
+HANDLE semRCounter = NULL;//semaphore for readersCount 
+HANDLE semFile = NULL;//semaphore for file
 int readersCount = 0;//for readers function realization
 
 int readersNumber = 0;// number of threads - readers
-int writersNumber = 0;
+int writersNumber = 0;// number of threads - writers
 WINBOOL finishRW = FALSE;
 
-HANDLE semCounter = NULL;
+HANDLE semCounter = NULL;//semaphore for globalCounter
 int globalCounter = 0;
 
 LinkedList* GetGlobalList(){
@@ -51,13 +51,14 @@ void PrintIntList(LinkedList* list){
      printf("[");
      if(!it){ //empty list
        printf("]\n");
+       return;
      }
      while(it){
         printf("%d%s", *((int*)it->data), it->next ? ", ": "]\n");
         it = it->next;
      }
 }
-int AddDataToGlobalList(int millis){
+int AddDataToGlobalList(LPVOID){
         srand(time(NULL));
         while(TRUE){
               Sleep(5000);
@@ -70,17 +71,21 @@ int AddDataToGlobalList(int millis){
                  break;
               }
               Data* data = (Data*) calloc(1, sizeof(Data));
+              if(data){
               data->value = rand() % 100;
               printf("Thread with id = %d add data = %d to list\n",GetCurrentThreadId(),data->value);
               Add(GetGlobalList(), data);
               printf("Current list: \n");
               PrintIntList(GetGlobalList());
+              } else {
+               printf("Not enough memory to add data\n");
+              }
               LeaveCriticalSection(&bufferLock);
               WakeConditionVariable(&bufferNotEmpty);
         }
         return 0;
 }
-int TakeDataFromGlobalList(int millis){
+int TakeDataFromGlobalList(LPVOID){
         while(TRUE){
               EnterCriticalSection(&bufferLock);
               while(!finishProduceAndConsume && GetGlobalList()->size == 0){
@@ -90,7 +95,7 @@ int TakeDataFromGlobalList(int millis){
                  LeaveCriticalSection(&bufferLock);
                  break;
               }
-              Data* data = RemoveByIndex(GetGlobalList(),0);
+              Data* data = RemoveByIndex(GetGlobalList(),GetGlobalList()->size - 1);
               printf("Thread with id = %d take data = %d from list\n",GetCurrentThreadId(),data->value);
               ReleaseData(data);
               printf("Current list: \n");
@@ -119,20 +124,6 @@ int InitRWContext(int argc,char* argv[]){
         semRCounter = CreateSemaphoreA(NULL,1,1,"RCounter");
         semFile = CreateSemaphoreA(NULL,1,1,"file");
         semOutput = CreateSemaphoreA(NULL,1,1,"output");
-        // init readers events
-        /*globalReadEvent = CreateEvent(NULL,  // default security
-                                      FALSE, // auto reset
-                                      FALSE,  // default state signaled
-                                      NULL);
-        if (!globalReadEvent)
-        {
-              PrintLastError();
-              return FALSE;
-        }
-        globalWriteEvent = CreateEvent(NULL,  // default security
-                                      FALSE, // auto reset
-                                      FALSE,  // default state signaled
-                                      NULL);*/
         hFile = UtilGetFileHandle(argv[4]);
         if(!hFile || hFile == INVALID_HANDLE_VALUE){
            PrintLastError();
@@ -300,14 +291,10 @@ void ProducerAndConsumer(int argc, char* argv[]){
         InitializeConditionVariable(&bufferNotEmpty);
         InitializeConditionVariable(&bufferNotFull);
         InitializeCriticalSection(&bufferLock);
-        int millis = 5000;
-        if(argc > 4){
-            millis = atoi(argv[4]);
-        }
         DWORD dwNewThreadID;
         HANDLE threads[MAX_THREADS];
         int NumThreads = prodNumber + consNumber;
-        int (*fptr)(int) = NULL;
+        int (*fptr)(LPVOID) = NULL;
         for (int i = 0; i < NumThreads;i++)
         {
             fptr = i < prodNumber ? AddDataToGlobalList : TakeDataFromGlobalList;
@@ -380,7 +367,7 @@ void ThreadsRace(int argc,char* argv[]){
 }
 void print_options()
 {
-   char *options[] = {"1.Create producers and consumers [number of producers] [number of consumers] [[opt] delay in millis]", 
+   char *options[] = {"1.Create producers and consumers [number of producers] [number of consumers]", 
                       "2.Create readers and writers [number of writers] [number of readers] [path to file] [[opt] data for write in file]", 
                       "3.Create threads"
                        };
