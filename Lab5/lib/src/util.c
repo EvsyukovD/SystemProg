@@ -3,12 +3,27 @@
 #include <stdlib.h>
 #include <stdio.h>
 #define MAX_LIST_SIZE 5
+#define MAX_THREADS 20
+
 CRITICAL_SECTION bufferLock = {0};
 CONDITION_VARIABLE bufferNotEmpty;
 CONDITION_VARIABLE bufferNotFull;
 WINBOOL finishProduceAndConsume = 0;
-
 LinkedList* globalList = NULL;
+
+HANDLE hFile = NULL;
+HANDLE semOutput = NULL;
+HANDLE semRCounter = NULL;
+HANDLE semFile = NULL;
+int readersCount = 0;//for readers function realization
+
+int readersNumber = 0;// number of threads - readers
+int writersNumber = 0;
+WINBOOL finishRW = FALSE;
+
+HANDLE semCounter = NULL;
+int counter = 0;
+
 LinkedList* GetGlobalList(){
     return globalList;
 }
@@ -41,31 +56,6 @@ void PrintIntList(LinkedList* list){
 }
 int AddDataToGlobalList(int millis){
         srand(time(NULL));
- /*  // convert parameter to mutex handle
-   HANDLE hMutex = (HANDLE)lpMutex;
-   // save the thread ID
-   DWORD dwThreadID = GetCurrentThreadId();
-   DWORD dwResult = WaitForSingleObject(hMutex, INFINITE);
-   if (dwResult == WAIT_OBJECT_0)
-   {
-      
-      LinkedList* list = GetGlobalList();
-      int* p = (int*)calloc(1, sizeof(int));
-      *p = rand();
-      printf("Thread %p acquired mutex.Add data %d\n", dwThreadID, *p);
-      Add(list, p);
-      printf("Current list:\n");
-      PrintIntList(list);
-      // hold the mutex
-      Sleep(1000);
-      printf("Thread %p releasing the mutex.\n", dwThreadID);
-      ReleaseMutex(hMutex);
-   }
-   else
-   {
-      return 1;
-   }
-   return 0;*/
         while(TRUE){
               Sleep(5000);
               EnterCriticalSection(&bufferLock);
@@ -88,28 +78,6 @@ int AddDataToGlobalList(int millis){
         return 0;
 }
 int TakeDataFromGlobalList(int millis){
-  /*  // convert parameter to mutex handle
-   HANDLE hMutex = (HANDLE)lpMutex;
-   // save the thread ID
-   DWORD dwThreadID = GetCurrentThreadId();
-   DWORD dwResult = WaitForSingleObject(hMutex, INFINITE);
-   if (dwResult == WAIT_OBJECT_0)
-   {
-      printf("Thread %p acquired mutex.Take data\n", dwThreadID);
-      // hold the mutex
-      LinkedList* list = GetGlobalList();
-      RemoveByIndex(list, 0);
-      printf("Current list:\n");
-      PrintIntList(list);
-      Sleep(1000);
-      printf("Thread %p releasing the mutex.\n", dwThreadID);
-      ReleaseMutex(hMutex);
-   }
-   else
-   {
-      return 1;
-   }
-   return 0;*/
         while(TRUE){
               EnterCriticalSection(&bufferLock);
               while(!finishProduceAndConsume && GetGlobalList()->size == 0){
@@ -130,23 +98,141 @@ int TakeDataFromGlobalList(int millis){
         }
         return 0;
 }
+int InitRWContext(int argc,char* argv[]){
+        if(argc <= 3){
+           printf("Not enough args\n");
+           return FALSE;
+        }
+        writersNumber = atoi(argv[1]); 
+        readersNumber = atoi(argv[2]);
+        if (writersNumber + readersNumber > MAX_THREADS)
+        {
+              printf("Too many threads. The number of threads should be not more than %d\n", MAX_THREADS);
+              writersNumber = 0;
+              readersNumber = 0;
+              return FALSE;
+        }
+        int threadsNumber = writersNumber + readersNumber;
+        semRCounter = CreateSemaphoreA(NULL,1,1,"RCounter");
+        semFile = CreateSemaphoreA(NULL,1,1,"file");
+        semOutput = CreateSemaphoreA(NULL,1,1,"output");
+        // init readers events
+        /*globalReadEvent = CreateEvent(NULL,  // default security
+                                      FALSE, // auto reset
+                                      FALSE,  // default state signaled
+                                      NULL);
+        if (!globalReadEvent)
+        {
+              PrintLastError();
+              return FALSE;
+        }
+        globalWriteEvent = CreateEvent(NULL,  // default security
+                                      FALSE, // auto reset
+                                      FALSE,  // default state signaled
+                                      NULL);*/
+        hFile = UtilGetFileHandle(argv[3]);
+        if(!hFile || hFile == INVALID_HANDLE_VALUE){
+           PrintLastError();
+           return FALSE;
+        }
+        return TRUE;
+}
+void DeInitializeRWContext()
+{
+     CloseHandle(semFile);
+     CloseHandle(semRCounter);
+     CloseHandle(hFile);
+}
+void SecurePrint(const char* format,...){
+   WaitForSingleObject(semOutput,INFINITE);
+   va_list arglist;
+   va_start( arglist, format );
+   vprintf( format, arglist );
+   va_end( arglist );
+   ReleaseSemaphore(semOutput,1,NULL);
+}
+int WriteToFile(LPVOID data){
+    while(TRUE){
+          Sleep(5000);
+          WaitForSingleObject(semFile,INFINITE);
+          SecurePrint("Writer %d is writing data %s\n",GetCurrentThreadId(),data);
+          if(!WriteFile(hFile,(char*)data,strlen((char*)data),NULL,NULL)){
+             SecurePrint("Thread %d can't write to file\n",GetCurrentThreadId());
+             PrintLastError();
+             break;
+          }
+          ReleaseSemaphore(semFile,1,NULL);
+          if(finishRW){
+            break;
+          }
+    }
+    return 0;
+}
+int ReadFromFileAndPrint(){
+    char* buffer[1024] = {0};
+    WINBOOL isFileCaptured = FALSE; //file captured
+    while(TRUE){
+          WaitForSingleObject(semRCounter,INFINITE);
+          readersCount++;
+          if(readersCount == 1){
+             WaitForSingleObject(semFile,INFINITE);
+             SetFilePointer(hFile,0,0,FILE_BEGIN);
+             isFileCaptured = TRUE;
+          }
+          ReleaseSemaphore(semRCounter,1,NULL);
+          if(isFileCaptured){
+             if (!ReadFile(hFile, buffer, 1023, NULL, NULL))
+             {
+                SecurePrint("Thread %d can't read from file\n", GetCurrentThreadId());
+                SecurePrint("Util error: %d\n", GetLastError());
+                break;
+             }
+             else
+             {
+                SetFilePointer(hFile, 0, 0, FILE_END);
+                SecurePrint("Data from file (thread %d)[\n%s\n]\n", GetCurrentThreadId(), buffer);
+             }
+          }
+          WaitForSingleObject(semRCounter,INFINITE);
+          readersCount--;
+          if(!readersCount){
+             ReleaseSemaphore(semFile,1,NULL);
+             isFileCaptured = FALSE;
+          }
+          ReleaseSemaphore(semRCounter,1,NULL);
+          if(finishRW){
+            break;
+          }
+          Sleep(5000);
+    }
+    return 0;
+}
+
+void ThreadIncrementCounter_1(LPVOID){
+
+}
+void ThreadIncrementCounter_2(LPVOID){}
+void ThreadIncrementCounter_3(LPVOID){}
 
 void ProducerAndConsumer(int argc, char* argv[]){
      if(argc > 2){
+        int prodNumber = atoi(argv[1]), consNumber = atoi(argv[2]);
+        if(prodNumber + consNumber > MAX_THREADS){
+           printf("Too many threads. The number of threads should be not more than %d\n",MAX_THREADS);
+           return;
+        }
         InitGlobalList();
         InitializeConditionVariable(&bufferNotEmpty);
         InitializeConditionVariable(&bufferNotFull);
         InitializeCriticalSection(&bufferLock);
-        int prodNumber = atoi(argv[1]), consNumber = atoi(argv[2]);
         int millis = 5000;
         if(argc > 3){
             millis = atoi(argv[3]);
         }
         DWORD dwNewThreadID;
-        const int MAX_THREADS = 20;
         HANDLE threads[MAX_THREADS];
         int NumThreads = prodNumber + consNumber;
-        int (*fptr)(LPVOID) = NULL;
+        int (*fptr)(int) = NULL;
         for (int i = 0; i < NumThreads;i++)
         {
             fptr = i < prodNumber ? AddDataToGlobalList : TakeDataFromGlobalList;
@@ -170,6 +256,38 @@ void ProducerAndConsumer(int argc, char* argv[]){
         EraseGlobalList(ReleaseData);
      }
 }
+
+void ReadAndWrite(int argc, char* argv[]){
+     if(!InitRWContext(argc,argv)){
+        return;
+     }
+     HANDLE threads[MAX_THREADS];
+     DWORD threadId;
+     int threadsNumber = writersNumber + readersNumber;
+     const char* data = "a";
+     for (int i = 0; i < threadsNumber; i++)
+     {    
+          if(i < readersNumber){
+              threads[i] = CreateThread(NULL,0,ReadFromFileAndPrint,0,0,&threadId);
+              SecurePrint("Reader %d created\n",threadId);
+          } else {
+              threads[i] = CreateThread(NULL,0,WriteToFile,argc > 4 ? argv[4] : data,0,&threadId);
+              SecurePrint("Writer %d created\n",threadId);
+          }
+
+     }
+     char c = 0;
+     SecurePrint("For ending program press enter\n");
+     scanf("%c",&c);
+     finishRW = TRUE;
+     for (int i = 0; i < threadsNumber; i++)
+     {
+       WaitForSingleObject(threads[i],INFINITE);
+       CloseHandle(threads[i]);
+     }
+     DeInitializeRWContext();
+}
+
 void print_options()
 {
    char *options[] = {"1.Create producers and consumers [number of producers] [number of consumers] [[opt] delay in millis]", 
