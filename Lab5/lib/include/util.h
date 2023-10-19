@@ -20,13 +20,13 @@ void DeInitializeRWContext();
 int WriteToFile(LPVOID data);
 int ReadFromFileAndPrint();
 
-void ThreadIncrementCounter_1(LPVOID);
-void ThreadIncrementCounter_2(LPVOID);
-void ThreadIncrementCounter_3(LPVOID);
+int ThreadIncrementCounter_1(LPVOID);
+int ThreadIncrementCounter_2(LPVOID);
+int ThreadIncrementCounter_3(LPVOID);
 
 extern void PrintIntList(LinkedList*);
 void ProducerAndConsumer(int argc, char* argv[]);
 void ReadAndWrite(int argc, char* argv[]);
-void ThreadsRace();
+void ThreadsRace(int argc,char* argv[]);
 void print_options();
 #endif

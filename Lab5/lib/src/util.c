@@ -4,7 +4,7 @@
 #include <stdio.h>
 #define MAX_LIST_SIZE 5
 #define MAX_THREADS 20
-
+#define COUNTER_MAX_VALUE 300
 CRITICAL_SECTION bufferLock = {0};
 CONDITION_VARIABLE bufferNotEmpty;
 CONDITION_VARIABLE bufferNotFull;
@@ -22,7 +22,7 @@ int writersNumber = 0;
 WINBOOL finishRW = FALSE;
 
 HANDLE semCounter = NULL;
-int counter = 0;
+int globalCounter = 0;
 
 LinkedList* GetGlobalList(){
     return globalList;
@@ -49,6 +49,9 @@ void ReleaseData(void* pData){
 void PrintIntList(LinkedList* list){
      Item* it = FindByIndex(list, 0);
      printf("[");
+     if(!it){ //empty list
+       printf("]\n");
+     }
      while(it){
         printf("%d%s", *((int*)it->data), it->next ? ", ": "]\n");
         it = it->next;
@@ -99,12 +102,12 @@ int TakeDataFromGlobalList(int millis){
         return 0;
 }
 int InitRWContext(int argc,char* argv[]){
-        if(argc <= 3){
+        if(argc <= 4){
            printf("Not enough args\n");
            return FALSE;
         }
-        writersNumber = atoi(argv[1]); 
-        readersNumber = atoi(argv[2]);
+        writersNumber = atoi(argv[2]); 
+        readersNumber = atoi(argv[3]);
         if (writersNumber + readersNumber > MAX_THREADS)
         {
               printf("Too many threads. The number of threads should be not more than %d\n", MAX_THREADS);
@@ -130,7 +133,7 @@ int InitRWContext(int argc,char* argv[]){
                                       FALSE, // auto reset
                                       FALSE,  // default state signaled
                                       NULL);*/
-        hFile = UtilGetFileHandle(argv[3]);
+        hFile = UtilGetFileHandle(argv[4]);
         if(!hFile || hFile == INVALID_HANDLE_VALUE){
            PrintLastError();
            return FALSE;
@@ -141,6 +144,7 @@ void DeInitializeRWContext()
 {
      CloseHandle(semFile);
      CloseHandle(semRCounter);
+     CloseHandle(semOutput);
      CloseHandle(hFile);
 }
 void SecurePrint(const char* format,...){
@@ -208,15 +212,86 @@ int ReadFromFileAndPrint(){
     return 0;
 }
 
-void ThreadIncrementCounter_1(LPVOID){
-
+int ThreadIncrementCounter_1(LPVOID){
+     int delta = 1;
+     while(TRUE){
+          Sleep(1000);
+          WaitForSingleObject(semCounter,INFINITE);
+          if(globalCounter <= COUNTER_MAX_VALUE - delta){
+             globalCounter = globalCounter + delta;
+             SecurePrint("Thread 1 increment counter on %d. New counter value = %d\n",delta,globalCounter);
+          }else{
+            ReleaseSemaphore(semCounter,1,NULL);
+            SecurePrint("Counter has big value. Thread %d exit\n",GetCurrentThreadId());
+            break;
+          }
+          ReleaseSemaphore(semCounter,1,NULL);
+          
+     }
+     return 0;
 }
-void ThreadIncrementCounter_2(LPVOID){}
-void ThreadIncrementCounter_3(LPVOID){}
+int ThreadIncrementCounter_2(LPVOID ptr){
+     HANDLE *hThread = (HANDLE *)ptr;
+     int delta = 20;
+     int stopVal = 50;
+     WINBOOL isSuspended = FALSE;
+     while (TRUE)
+     {
+          Sleep(1000);
+          WaitForSingleObject(semCounter, INFINITE);
+          if (globalCounter <= COUNTER_MAX_VALUE - delta)
+          {
+            globalCounter = globalCounter + delta;
+            SecurePrint("Thread 2 increment counter on %d. New counter value = %d\n", delta, globalCounter);
+            if (globalCounter >= stopVal && !isSuspended)
+            {
+                SuspendThread(*hThread);
+                isSuspended = TRUE;
+            }
+          }
+          else
+          {
+            ReleaseSemaphore(semCounter, 1, NULL);
+            SecurePrint("Counter has big value. Thread %d exit\n", GetCurrentThreadId());
+            break;
+          }
+          ReleaseSemaphore(semCounter, 1, NULL);
+     }
+     return 0;
+}
+int ThreadIncrementCounter_3(LPVOID ptr){
+     HANDLE *hThread = (HANDLE *)ptr;
+     int delta = 30;
+     int continueVal = 250;
+     WINBOOL isResumed = FALSE;
+     while (TRUE)
+     {
+          Sleep(1000);
+          WaitForSingleObject(semCounter, INFINITE);
+          if (globalCounter <= COUNTER_MAX_VALUE - delta)
+          {
+            globalCounter = globalCounter + delta;
+            SecurePrint("Thread 3 increment counter on %d. New counter value = %d\n", delta, globalCounter);
+            if (globalCounter >= continueVal && !isResumed)
+            {
+                ResumeThread(*hThread);
+                isResumed = TRUE;
+            }
+          }
+          else
+          {
+            ReleaseSemaphore(semCounter, 1, NULL);
+            SecurePrint("Counter has big value. Thread %d exit\n", GetCurrentThreadId());
+            break;
+          }
+          ReleaseSemaphore(semCounter, 1, NULL);
+     }
+     return 0;
+}
 
 void ProducerAndConsumer(int argc, char* argv[]){
-     if(argc > 2){
-        int prodNumber = atoi(argv[1]), consNumber = atoi(argv[2]);
+     if(argc > 3){
+        int prodNumber = atoi(argv[2]), consNumber = atoi(argv[3]);
         if(prodNumber + consNumber > MAX_THREADS){
            printf("Too many threads. The number of threads should be not more than %d\n",MAX_THREADS);
            return;
@@ -226,8 +301,8 @@ void ProducerAndConsumer(int argc, char* argv[]){
         InitializeConditionVariable(&bufferNotFull);
         InitializeCriticalSection(&bufferLock);
         int millis = 5000;
-        if(argc > 3){
-            millis = atoi(argv[3]);
+        if(argc > 4){
+            millis = atoi(argv[4]);
         }
         DWORD dwNewThreadID;
         HANDLE threads[MAX_THREADS];
@@ -271,7 +346,7 @@ void ReadAndWrite(int argc, char* argv[]){
               threads[i] = CreateThread(NULL,0,ReadFromFileAndPrint,0,0,&threadId);
               SecurePrint("Reader %d created\n",threadId);
           } else {
-              threads[i] = CreateThread(NULL,0,WriteToFile,argc > 4 ? argv[4] : data,0,&threadId);
+              threads[i] = CreateThread(NULL,0,WriteToFile,argc > 5 ? argv[5] : data,0,&threadId);
               SecurePrint("Writer %d created\n",threadId);
           }
 
@@ -288,10 +363,25 @@ void ReadAndWrite(int argc, char* argv[]){
      DeInitializeRWContext();
 }
 
+void ThreadsRace(int argc,char* argv[]){
+     semCounter = CreateSemaphoreA(NULL,1,1,"globalCounter");
+     semOutput = CreateSemaphoreA(NULL,1,1,"output");
+     DWORD threadID = 0;
+     HANDLE thread1 = CreateThread(0,0,ThreadIncrementCounter_1,0,0,&threadID);
+     SecurePrint("Thread 1 (%d) created\n",threadID);
+     HANDLE thread2 = CreateThread(0,0,ThreadIncrementCounter_2,(LPVOID)&thread1,0,&threadID);
+     SecurePrint("Thread 2 (%d) created\n",threadID);
+     HANDLE thread3 = CreateThread(0,0,ThreadIncrementCounter_3,(LPVOID)&thread1,0,&threadID);
+     SecurePrint("Thread 3 (%d) created\n",threadID);
+     HANDLE threads[] = {thread1,thread2,thread3};
+     WaitForMultipleObjects(3,threads,TRUE,INFINITE);
+     CloseHandle(semCounter);
+     CloseHandle(semOutput);
+}
 void print_options()
 {
    char *options[] = {"1.Create producers and consumers [number of producers] [number of consumers] [[opt] delay in millis]", 
-                      "2.Create readers and writers [number of producers] [number of consumers] [path to file]", 
+                      "2.Create readers and writers [number of writers] [number of readers] [path to file] [[opt] data for write in file]", 
                       "3.Create threads"
                        };
    int options_num = sizeof(options) / sizeof(options[0]);
