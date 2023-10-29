@@ -126,6 +126,9 @@ int InitRWContext(int argc,char* argv[]){
         semOutput = CreateSemaphoreA(NULL,1,1,"output");
         hFile = UtilGetFileHandle(argv[4]);
         if(!hFile || hFile == INVALID_HANDLE_VALUE){
+           CloseHandle(semCounter);
+           CloseHandle(semFile);
+           CloseHandle(semOutput);
            PrintLastError();
            return FALSE;
         }
@@ -316,6 +319,7 @@ void ProducerAndConsumer(int argc, char* argv[]){
         printf("Current global list:\n");
         PrintIntList(GetGlobalList());
         EraseGlobalList(ReleaseData);
+        DeleteCriticalSection(&bufferLock);
      }
 }
 
