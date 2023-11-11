@@ -115,7 +115,7 @@ Message* InitMessageFromClient(SOCKET client,const char* buffer){
     int start = 0;
     if(!strcmp(buffer,signal_bye)){
        return InitByeMessage(client);
-    } else {
+    } else if(strstr(buffer,sep)){
         int dest_id = GetNumberFromBufferBeforeSep(buffer,sep);
         if(CheckClientId(dest_id)){
             int src_id = GetClientId(client);
@@ -135,10 +135,17 @@ Message* InitMessageFromClient(SOCKET client,const char* buffer){
             msg = CreateMessage();
             msg->src_id = GetClientId(client);
             itoa(msg->src_id, msg->buffer, radix);
-            sprintf(msg->buffer,"Can't find user with dest id = %d\n", dest_id);
+            sprintf(msg->buffer,"Can't find user with dest id = %d", dest_id);
             msg->dest_id = msg->src_id;
             return msg;
         }
+    } else {
+        msg = CreateMessage();
+        msg->src_id = GetClientId(client);
+        itoa(msg->src_id, msg->buffer, radix);
+        sprintf(msg->buffer, "Wrong message type: must be 'id:data'");
+        msg->dest_id = msg->src_id;
+        return msg;
     }
 }
 WINBOOL StartServerContext(const char* ip,const char* port)
@@ -284,8 +291,17 @@ int SendMessageToClient(LPVOID cl){
         {
             SleepConditionVariableCS(&bufferNotEmpty, &section, INFINITE);
         }
-        msg = GetDataByIndex(GetGlobalList(), 0);
-        destClient = GetSocketById(msg->dest_id);
+        int size = GetGlobalList()->size;
+        for (int i = 0; i < size; i++)
+        {
+             msg = GetDataByIndex(GetGlobalList(), i);
+             destClient = GetSocketById(msg->dest_id);
+             if(destClient == client){
+                break;
+             }
+        }
+        //msg = GetDataByIndex(GetGlobalList(), 0);
+        //destClient = GetSocketById(msg->dest_id);
         if (destClient == client)
         {
             RemoveByIndex(GetGlobalList(), 0);

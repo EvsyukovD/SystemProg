@@ -11,6 +11,83 @@ void PrintLastError(){
 void PrintLastWSAError(){
     printf("Client wsa error: %d\n", WSAGetLastError());
 }
+void ProcessFilePartFromServer(const char* buf){
+    // buf: fileName:data
+    HANDLE file = INVALID_HANDLE_VALUE;
+    const char sep = ':';
+    char *ptr = strchr(buf, sep);
+    if(!ptr){//invalid file partition
+        return;
+    }
+    int size = ptr - buf; // before ':'
+    char name[20] = {0};
+    name[0] = '.';
+    name[1] = '/';
+    strncpy(&name[2], buf, size);
+    file = CreateFileA(name,
+                       FILE_GENERIC_READ | FILE_GENERIC_WRITE,
+                       FILE_SHARE_WRITE | FILE_SHARE_READ,
+                       NULL, OPEN_EXISTING,
+                       FILE_ATTRIBUTE_NORMAL, NULL);
+    if (file == INVALID_HANDLE_VALUE)
+    {
+        file = CreateFileA(name,
+                           FILE_GENERIC_READ | FILE_GENERIC_WRITE,
+                           FILE_SHARE_WRITE | FILE_SHARE_READ,
+                           NULL, CREATE_ALWAYS,
+                           FILE_ATTRIBUTE_NORMAL, NULL);
+    }
+    if (file == INVALID_HANDLE_VALUE)
+    {
+        PrintLastError();
+        return;
+    }
+    char* data = &ptr[1];
+    long unsigned int written_bytes = 0;
+    int len = strlen(data);
+    WINBOOL res = WriteFile(file, data, len, &written_bytes, NULL);
+    if (!res)
+    {
+        CloseHandle(file);
+        PrintLastError();
+        return;
+    }
+    CloseHandle(file);
+}
+WINBOOL ReadFilePartForServer(char *destBuffer, 
+                              int destBufferSize, 
+                              int destId, 
+                              const char *fileName, 
+                              LPDWORD writtenBytes, 
+                              DWORD skipBytes)
+{
+    int radix = 10;
+    const char* sep = ":"; 
+    HANDLE file = CreateFileA(fileName,
+                              FILE_GENERIC_READ | FILE_GENERIC_WRITE,
+                              FILE_SHARE_WRITE | FILE_SHARE_READ,
+                              NULL, OPEN_EXISTING,
+                              FILE_ATTRIBUTE_NORMAL, NULL);
+    if (file == INVALID_HANDLE_VALUE)
+    {
+        *writtenBytes = 0;
+        return FALSE;
+    }
+    memset(destBuffer, 0, destBufferSize);
+    itoa(destId, destBuffer, radix);
+    strcat(destBuffer, sep);
+    strcat(destBuffer, fileName);
+    strcat(destBuffer, sep);
+    int i = strlen(destBuffer);
+    SetFilePointer(file,skipBytes, NULL, FILE_BEGIN);
+    if(!ReadFile(file, &destBuffer[i], destBufferSize - i,writtenBytes,NULL)){
+        PrintLastError();
+        CloseHandle(file);
+        return FALSE;
+    }
+    CloseHandle(file);
+    return TRUE; // we have read full file
+}
 WINBOOL StartClientContext(const char * ip,const char* port, const char* signal_bye)
 {
     int result = E_FAIL;
@@ -108,11 +185,20 @@ int GetMessageFromServer(LPVOID pserv){
     char buffer[1024] = {0};
     int len = 1024;
     int result = 0;
+    char* ptr = NULL;
+    char file_id = 'f';
+    char* fileName = NULL;
+    char sep = ':';
     SOCKET server_socket = *((SOCKET*) pserv);
     while(isRunning){
         result = recv(server_socket,buffer,len,0);
         if(result > 0){
-            printf("From server %s\n",buffer);
+           // ptr = strchr(buffer, sep);
+           // if(ptr && ptr[1] == file_id && ptr[2] == sep){//buffer: id:data or id:file_id:...
+           //    ProcessFilePartFromServer(&ptr[3]);
+           // }else{
+               printf("From server %s\n",buffer);
+          //  }
 
         } else if(result == 0){
             printf("Server close connection\n");
