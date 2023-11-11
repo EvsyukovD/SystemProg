@@ -1,6 +1,10 @@
 #include "client.h"
 #include "clientmsgservice.h"
 #include <stdio.h>
+const char* signal_bye = "bye";
+WINBOOL endSessionFlag = FALSE;
+CRITICAL_SECTION section = {0};
+
 void PrintLastError(){
     printf("Client error: %d\n",GetLastError());
 }
@@ -57,55 +61,83 @@ WINBOOL StartClientContext(const char * ip,const char* port, const char* signal_
     FinishClientContext(full_client, connect_socket);
     return TRUE;
 }
-void MessageHandler(SOCKET connect_socket, const char *signal_bye)
-{
-    const int len = 1024;
+int SendMessageToServer(LPVOID args){
+    WINBOOL isRunning = TRUE;
     char buffer[1024] = {0};
-    char* ans = NULL;
+    int len = 1024;
+    int cur_len = 0;
     int result = 0;
-    char c = 0;
-    char name[100];
-    WINBOOL is_running = TRUE;
-    printf("Write initial msg\n");
-    fgets(buffer, len, stdin);
-    while (is_running)
-    {
-        result = send(connect_socket, buffer, strlen(buffer), 0);
+    LONG64* params = (LONG64*) args;
+    HANDLE* h = params[1];
+    SOCKET* s = params[0];
+    SOCKET server_socket = *s;
+    HANDLE receiverThread = *h;
+    DWORD code = 0;
+    DWORD exitCode = 0;
+    while(isRunning){
+        fflush(stdin);
+        fgets(buffer, len, stdin);
+        cur_len = strlen(buffer);
+        if(cur_len > 0){
+           buffer[cur_len - 1] = 0;
+        }
+        if (!strcmp(buffer,signal_bye))
+        {
+            isRunning = FALSE;
+            GetExitCodeThread(receiverThread,&exitCode);
+            if(exitCode == STILL_ACTIVE){
+               TerminateThread(receiverThread, code);
+            }
+        }
+        result = send(server_socket, buffer, len, 0);
         if (result == SOCKET_ERROR)
         {
-            printf("Failed to send data with code %d",WSAGetLastError());
-            is_running = FALSE;
-            continue;
+            printf("Failed to send data with code %d\n", WSAGetLastError());
+            isRunning = FALSE;
+            GetExitCodeThread(receiverThread,&exitCode);
+            if(exitCode == STILL_ACTIVE){
+               TerminateThread(receiverThread, code);
+            }
         }
         memset(buffer, 0, len);
-        result = recv(connect_socket, buffer, len, 0);
-        if(result > 0){
-            ans = answer(buffer);
-            if(ans){
-                if(send(connect_socket,ans,strlen(ans),0) == SOCKET_ERROR){
-                   result = 0;
-                }
-                free(ans);
-                ans = NULL;
-            }
-            if(strncmp(buffer, signal_bye, strlen(signal_bye)) == 0){
-                printf("Server close connection\n");
-                is_running = FALSE;
-                result == ERROR_SUCCESS;
-            }
-        } else if(result == 0){
-                  printf("Connection closing...\n");
-        } else {
-                  printf("Failed to recv with code %d\n",WSAGetLastError());
-        }
-        printf("Finish work? Press Y to finish...\n");
-        fflush(stdin);
-        scanf("%c",&c);
-        if(c == 'Y'){
-            is_running = FALSE;
-        }
-        fflush(stdin);
     }
+    return 0;
+}
+int GetMessageFromServer(LPVOID pserv){
+    WINBOOL isRunning = TRUE;
+    char buffer[1024] = {0};
+    int len = 1024;
+    int result = 0;
+    SOCKET server_socket = *((SOCKET*) pserv);
+    while(isRunning){
+        result = recv(server_socket,buffer,len,0);
+        if(result > 0){
+            printf("From server %s\n",buffer);
+
+        } else if(result == 0){
+            printf("Server close connection\n");
+            isRunning = FALSE;
+        } else {
+            printf("Failed to recv with code %d\n", WSAGetLastError());
+            isRunning = FALSE;
+        }
+        memset(buffer,0, len);
+    }
+}
+void MessageHandler(SOCKET connect_socket, const char *signal_bye)
+{
+    HANDLE threads[2];
+    int threadsNumber = 2;
+    DWORD threadId = 0;
+    threads[0] = CreateThread(NULL,0,GetMessageFromServer,&connect_socket,0,&threadId);
+    LONG64* args[2] = {&connect_socket, &threads[0]};
+    threads[1] = CreateThread(NULL,0,SendMessageToServer,args,0,&threadId);
+    WaitForMultipleObjects(threadsNumber,threads,TRUE,INFINITE);
+    for (int i = 0; i < threadsNumber; i++)
+    {
+        CloseHandle(threads[i]);
+    }
+    printf("Finish client api\n");
 }
 void FinishClientContext(ADDRINFOA *full_server, SOCKET listen_socket)
 {

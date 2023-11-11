@@ -7,5 +7,7 @@ void PrintLastError();
 void PrintLastWSAError();
 WINBOOL StartClientContext(const char *ip,const char* port, const char* bye_signal);
 void MessageHandler(SOCKET listen_socket,const char* signal_bye);
+int SendMessageToServer(LPVOID);
+int GetMessageFromServer(LPVOID);
 void FinishClientContext(ADDRINFOA* full_server,SOCKET listen_socket);
 #endif
