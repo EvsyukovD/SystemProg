@@ -11,5 +11,6 @@ WINBOOL ReadFilePartForServer(char* destBuffer,
                               DWORD skipBytes,
                               WINBOOL* isEof);
 WINBOOL Dialog(char* buffer, int bufferSize);
+DWORD GetNumberFromBufferBeforeSep(const char* s, char sep);
 void ExtractFileName(char* destBuffer, const char* buffer);
 #endif

@@ -1,6 +1,7 @@
 #include "clientmsgservice.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 char* answer(const char* msg){
      const int ANSWER_SIZE = 20;
      char *ans = calloc(ANSWER_SIZE,sizeof(char));
@@ -11,6 +12,14 @@ char* answer(const char* msg){
      printf("Write answer for message: %s",msg);
      fgets(ans,ANSWER_SIZE, stdin);
      return ans;
+}
+DWORD GetNumberFromBufferBeforeSep(const char* s, char sep){
+   DWORD result = 0;
+   for (int i = 0; s[i] && s[i] != sep; i++)
+   {
+        result = 10 * result + s[i] - '0';
+   }
+   return result;
 }
 void ExtractFileName(char* destBuffer, const char* buffer){
    char delim = '\\';
@@ -105,46 +114,57 @@ WINBOOL Dialog(char* buffer, int bufferSize){
      }
 }
 void ProcessFilePartFromServer(const char* buf){
-    // buf: fileName:data
-    HANDLE file = INVALID_HANDLE_VALUE;
-    const char* sep = ":";
-    char *ptr = strstr(buf, sep);
-    if(!ptr){//invalid file partition
+     // buf: fileName:filesize:data
+     HANDLE file = INVALID_HANDLE_VALUE;
+     const char *sep = ":";
+     char *ptr = strstr(buf, sep);
+     if (!ptr)
+     { // invalid file partition
         return;
-    }
-    int size = ptr - buf; // before ':'
-    char name[1024] = {0};
-    strcpy(name, "C:\\Users\\devsy\\Desktop\\SysProg\\Lab6\\client\\instl\\");
-    strncat(name, buf, size);
-    file = CreateFileA(name,
-                       FILE_GENERIC_READ | FILE_GENERIC_WRITE,
-                       FILE_SHARE_WRITE | FILE_SHARE_READ,
-                       NULL, OPEN_EXISTING,
-                       FILE_ATTRIBUTE_NORMAL, NULL);
-    if (file == INVALID_HANDLE_VALUE)
-    {
+     }
+     int size = ptr - buf; // before ':'
+     char name[1024] = {0};
+     strcpy(name, "C:\\Users\\devsy\\Desktop\\SysProg\\Lab6\\client\\instl\\");
+     strncat(name, buf, size);
+     ptr = ptr + 1;
+     DWORD originFileSize = GetNumberFromBufferBeforeSep(ptr, sep[0]); // read file size
+     file = CreateFileA(name,
+                        FILE_GENERIC_READ | FILE_APPEND_DATA,
+                        FILE_SHARE_WRITE | FILE_SHARE_READ,
+                        NULL, OPEN_EXISTING,
+                        FILE_ATTRIBUTE_NORMAL, NULL);
+     if(file == INVALID_HANDLE_VALUE){
         file = CreateFileA(name,
-                           FILE_GENERIC_READ | FILE_GENERIC_WRITE,
-                           FILE_SHARE_WRITE | FILE_SHARE_READ,
-                           NULL, CREATE_ALWAYS,
-                           FILE_ATTRIBUTE_NORMAL, NULL);
-    }
-    if (file == INVALID_HANDLE_VALUE)
-    {
+                    FILE_GENERIC_READ | FILE_APPEND_DATA,
+                    FILE_SHARE_WRITE | FILE_SHARE_READ,
+                    NULL, CREATE_ALWAYS,
+                    FILE_ATTRIBUTE_NORMAL, NULL);
+     } else {
+        DWORD size = GetFileSize(file, NULL);
+        if(size == originFileSize){
+           printf("File %s already exists\n", name);
+           return;
+        }
+     }
+     if (file == INVALID_HANDLE_VALUE)
+     {
         printf("Util error: %d\n", GetLastError());
         return;
-    }
-    char* data = &ptr[1];
-    long unsigned int written_bytes = 0;
-    int len = strlen(data);
-    WINBOOL res = WriteFile(file, data, len, &written_bytes, NULL);
-    if (!res)
-    {
+     }
+     // ptr
+     // filesize:data
+     ptr = strstr(ptr, sep) + 1;
+     char *data = ptr;
+     long unsigned int written_bytes = 0;
+     int len = strlen(data);
+     WINBOOL res = WriteFile(file, data, len, &written_bytes, NULL);
+     if (!res)
+     {
         CloseHandle(file);
         printf("Util error: %d\n", GetLastError());
         return;
-    }
-    CloseHandle(file);
+     }
+     CloseHandle(file);
 }
 WINBOOL ReadFilePartForServer(char *destBuffer, 
                               int destBufferSize, 
@@ -169,7 +189,8 @@ WINBOOL ReadFilePartForServer(char *destBuffer,
         return FALSE;
     }
     ExtractFileName(fileName, path);
-    //destBuffer format: destId:file_id:fileName:data
+    DWORD fileSize = GetFileSize(file, NULL);
+    //destBuffer format: destId:file_id:fileName:filesize:data
     memset(destBuffer, 0, destBufferSize);
     itoa(destId, destBuffer, radix);
     strcat(destBuffer, sep);
@@ -177,17 +198,18 @@ WINBOOL ReadFilePartForServer(char *destBuffer,
     strcat(destBuffer, sep);
     strcat(destBuffer, fileName);
     strcat(destBuffer, sep);
+    int i = strlen(destBuffer);
+    _ultoa_s(fileSize, &destBuffer[i], destBufferSize - i, radix);
+    strcat(destBuffer, sep);
     int headerSize = strlen(destBuffer);
     SetFilePointer(file, skipBytes, NULL, FILE_BEGIN);
-    WINBOOL result = ReadFile(file, &destBuffer[headerSize], destBufferSize - headerSize,writtenBytes,NULL);
+    WINBOOL result = ReadFile(file, &destBuffer[headerSize], destBufferSize - headerSize - 1,writtenBytes,NULL);
     if(!result){
         printf("Util error: %d\n", GetLastError());
         CloseHandle(file);
         return FALSE;
     }
-    DWORD size;
-    //SetFilePointerEx(file, 0, &pos, FILE_CURRENT);
-    size = GetFileSize(file, NULL);
+    DWORD size = GetFileSize(file, NULL);
     *isEof = *writtenBytes + skipBytes >= size;
     CloseHandle(file);
     return TRUE;
