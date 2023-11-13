@@ -10,7 +10,7 @@ void PrintLastError(){
 void PrintLastWSAError(){
     printf("Client wsa error: %d\n", WSAGetLastError());
 }
-WINBOOL StartClientContext(const char * ip,const char* port, const char* signal_bye)
+WINBOOL StartClientContext(const char * ip,const char* port)
 {
     int result = E_FAIL;
     WSADATA wsa = {0};
@@ -35,7 +35,7 @@ WINBOOL StartClientContext(const char * ip,const char* port, const char* signal_
     printf("GetAddrInfo returned %d\n", result);
     if (result != ERROR_SUCCESS)
     {
-        PrintLastError();
+        PrintLastWSAError();
         FinishClientContext(full_client, connect_socket);
         return FALSE;
     }
@@ -118,7 +118,7 @@ int GetMessageFromServer(LPVOID pserv){
             if(ptr &&  ptr[1] == file_id && ptr[2] == sep){//buffer: id:data or id:file_id:...
                ProcessFilePartFromServer(&ptr[3]);
             }else{
-               printf("From server %s\n",buffer);
+               printf("From server: client %s\n",buffer);
             }
 
         } else if(result == 0){
@@ -156,4 +156,18 @@ void FinishClientContext(ADDRINFOA *full_server, SOCKET listen_socket)
     {
         closesocket(listen_socket);
     }
+}
+void StartClientContextArgs(int argc, char* argv[]){
+     StartClientContext(argv[2], argv[3]);
+}
+void print_options()
+{
+   char *options[] = {"1.Start server [ip] [port]", 
+                      "2.Start server pipe" 
+                       };
+   int options_num = sizeof(options) / sizeof(options[0]);
+   for (int i = 0; i < options_num; i++)
+   {
+      printf("%s\n", options[i]);
+   }
 }

@@ -1,5 +1,4 @@
 #include "server.h"
-#include "msgservice.h"
 #include <stdio.h>
 #include <stdlib.h>
 const char* signal_bye = "bye";
@@ -173,7 +172,7 @@ WINBOOL StartServerContext(const char* ip,const char* port)
     printf("GetAddrInfo returned %d\n", result);
     if (result != ERROR_SUCCESS)
     {
-        PrintLastError();
+        PrintLastWSAError();
         FinishServerContext(full_server, listen_socket);
         return FALSE;
     }
@@ -210,8 +209,8 @@ void RegisterClients(SOCKET listen_socket, Client* clients, int clientsNumber){
     WINBOOL finishRegistration = FALSE;
     int i = 0;
     int result = 0;
-    char buffer[50] = {0};
-    int len = 50;
+    char buffer[100] = {0};
+    int len = 100;
     while (!finishRegistration)
     {
         clients[i].client = accept(listen_socket, NULL, NULL);
@@ -225,7 +224,7 @@ void RegisterClients(SOCKET listen_socket, Client* clients, int clientsNumber){
         if(clientsNumber - 1 == i){
             finishRegistration = TRUE;
         }
-        sprintf(buffer,"Your id = %d, bye signal = '%s'",clients[i].id, signal_bye);
+        sprintf(buffer,"Your id = %d, bye signal = '%s'. Msg format: dest_id:data",clients[i].id, signal_bye);
         result = send(clients[i].client, buffer, len, 0);
         if(result == SOCKET_ERROR){
            printf("Failed to send data with code %d\n", WSAGetLastError());
@@ -263,11 +262,9 @@ int GetMessageFromClient(LPVOID cl){
         {
             isRunning = msg->msg_type == SERVER_END_SESSION_MSG_TYPE ? FALSE : TRUE;
             EnterCriticalSection(&section);
-            //WaitForSingleObject(semGlobalList, INFINITE);
             Add(GetGlobalList(), msg);
             msg = NULL;
             LeaveCriticalSection(&section);
-            //ReleaseSemaphore(semGlobalList, 1, NULL);
             WakeAllConditionVariable(&bufferNotEmpty);
         }
         memset(buffer, 0, len);
@@ -286,13 +283,13 @@ int SendMessageToClient(LPVOID cl){
     while (isRunning)
     {
         EnterCriticalSection(&section);
-        //WaitForSingleObject(semGlobalList, INFINITE);
         while (GetGlobalList()->size == 0)
         {
             SleepConditionVariableCS(&bufferNotEmpty, &section, INFINITE);
         }
         int size = GetGlobalList()->size;
-        for (int i = 0; i < size; i++)
+        int i = 0;
+        for (i = 0; i < size; i++)
         {
              msg = GetDataByIndex(GetGlobalList(), i);
              destClient = GetSocketById(msg->dest_id);
@@ -300,11 +297,9 @@ int SendMessageToClient(LPVOID cl){
                 break;
              }
         }
-        //msg = GetDataByIndex(GetGlobalList(), 0);
-        //destClient = GetSocketById(msg->dest_id);
         if (destClient == client)
         {
-            RemoveByIndex(GetGlobalList(), 0);
+            RemoveByIndex(GetGlobalList(), i);
             if (msg->dest_id == msg->src_id && msg->msg_type == SERVER_END_SESSION_MSG_TYPE)
             {
                 RemoveClientById(msg->src_id);
@@ -320,7 +315,6 @@ int SendMessageToClient(LPVOID cl){
             }
             ReleaseMessage(msg);
         }
-        //ReleaseSemaphore(semGlobalList, 1, NULL);
         LeaveCriticalSection(&section);
         Sleep(millis);
     }
@@ -365,4 +359,18 @@ void FinishServerContext(ADDRINFOA *full_server, SOCKET listen_socket)
     {
         closesocket(listen_socket);
     }
+}
+void StartServerContextArgs(int argc, char* argv[]){
+     StartServerContext(argv[2], argv[3]);
+}
+void print_options()
+{
+   char *options[] = {"1.Start server [ip] [port]", 
+                      "2.Start server pipe" 
+                       };
+   int options_num = sizeof(options) / sizeof(options[0]);
+   for (int i = 0; i < options_num; i++)
+   {
+      printf("%s\n", options[i]);
+   }
 }

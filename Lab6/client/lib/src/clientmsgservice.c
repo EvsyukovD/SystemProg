@@ -2,17 +2,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-char* answer(const char* msg){
-     const int ANSWER_SIZE = 20;
-     char *ans = calloc(ANSWER_SIZE,sizeof(char));
-     if(!ans){
-        return NULL;
-     }
-     fflush(stdin);
-     printf("Write answer for message: %s",msg);
-     fgets(ans,ANSWER_SIZE, stdin);
-     return ans;
-}
 DWORD GetNumberFromBufferBeforeSep(const char* s, char sep){
    DWORD result = 0;
    for (int i = 0; s[i] && s[i] != sep; i++)
@@ -41,6 +30,7 @@ WINBOOL Dialog(char* buffer, int bufferSize){
      {
         puts("Do you want to send msg or file? Press Y or N respectively");
         scanf("%s", ans);
+        printf("Your answer: %c\n", ans[0]);
         if (ans[0] == 'Y')
         {
            n = scanf("%s", buffer);
@@ -53,7 +43,7 @@ WINBOOL Dialog(char* buffer, int bufferSize){
         }
         if (ans[0] == 'N')
         {
-           puts("Enter file name:");
+           puts("Enter file path:");
            scanf("%s", fileName);
            puts("Enter dest id:");
            scanf("%d", &destId);
@@ -83,6 +73,7 @@ WINBOOL Dialog(char* buffer, int bufferSize){
               return FALSE;
            }
         }
+        printf("You should choose type of msg\n");
         return FALSE;
      }
      else
@@ -117,6 +108,7 @@ void ProcessFilePartFromServer(const char* buf){
      // buf: fileName:filesize:data
      HANDLE file = INVALID_HANDLE_VALUE;
      const char *sep = ":";
+     char ans[2] = {0}; 
      char *ptr = strstr(buf, sep);
      if (!ptr)
      { // invalid file partition
@@ -124,7 +116,8 @@ void ProcessFilePartFromServer(const char* buf){
      }
      int size = ptr - buf; // before ':'
      char name[1024] = {0};
-     strcpy(name, "C:\\Users\\devsy\\Desktop\\SysProg\\Lab6\\client\\instl\\");
+     strcpy(name, SOURCE_ROOT);
+     strcat(name, "//instl//");
      strncat(name, buf, size);
      ptr = ptr + 1;
      DWORD originFileSize = GetNumberFromBufferBeforeSep(ptr, sep[0]); // read file size

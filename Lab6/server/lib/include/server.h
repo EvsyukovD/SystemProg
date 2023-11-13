@@ -36,6 +36,12 @@ Message* InitMessageFromClient(SOCKET client,const char* buffer);
 int GetMessageFromClient(LPVOID client);//add data to global list
 int SendMessageToClient(LPVOID client);//take data from global list
 WINBOOL StartServerContext(const char* ip,const char* port1);
+int StartServerPipeContext();
 void MessageHandler(SOCKET listen_socket);
+void StartServerContextArgs(int argc, char* argv[]);
+void StartServerPipeContextArgs(int argc, char* argv[]);
+DWORD WINAPI InstanceThread(LPVOID); 
+VOID GetAnswerToRequest(LPTSTR, LPTSTR, LPDWORD); 
+void print_options();
 void FinishServerContext(ADDRINFOA* full_server,SOCKET listen_socket);
 #endif
