@@ -36,7 +36,7 @@ Message* InitMessageFromClient(SOCKET client,const char* buffer);
 int GetMessageFromClient(LPVOID client);//add data to global list
 int SendMessageToClient(LPVOID client);//take data from global list
 WINBOOL StartServerContext(const char* ip,const char* port1);
-int StartServerPipeContext();
+int StartServerPipeContext(const char* name);
 void MessageHandler(SOCKET listen_socket);
 void StartServerContextArgs(int argc, char* argv[]);
 void StartServerPipeContextArgs(int argc, char* argv[]);

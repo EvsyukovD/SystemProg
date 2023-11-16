@@ -2,16 +2,22 @@
 #include <stdio.h> 
 #include <tchar.h>
 #include <strsafe.h>
+#include <string.h>
 #define BUFSIZE 512
 void StartServerPipeContextArgs(int argc, char* argv[]){
-     StartServerPipeContext();
+     StartServerPipeContext(argv[2]);
 }
-int StartServerPipeContext() 
+int StartServerPipeContext(const char* name) 
 { 
    BOOL   fConnected = FALSE; 
    DWORD  dwThreadId = 0; 
    HANDLE hPipe = INVALID_HANDLE_VALUE, hThread = NULL; 
-   LPCTSTR lpszPipename = TEXT("\\\\.\\pipe\\mynamedpipe"); 
+   char lpszPipename[30] = {0};
+   const int len = 30;
+   const char* s = "\\\\.\\pipe\\";
+   strcpy_s(lpszPipename, len, s);
+   strcat_s(lpszPipename, len - strlen(s),name);
+   //LPCTSTR lpszPipename = TEXT("\\\\.\\pipe\\mynamedpipe"); 
  
 // The main loop creates an instance of the named pipe and 
 // then waits for a client to connect to it. When the client 

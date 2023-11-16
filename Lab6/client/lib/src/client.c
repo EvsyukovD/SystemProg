@@ -162,8 +162,8 @@ void StartClientContextArgs(int argc, char* argv[]){
 }
 void print_options()
 {
-   char *options[] = {"1.Start server [ip] [port]", 
-                      "2.Start server pipe" 
+   char *options[] = {"1.Start client [ip] [port]", 
+                      "2.Start client pipe [pipename_to_connect]" 
                        };
    int options_num = sizeof(options) / sizeof(options[0]);
    for (int i = 0; i < options_num; i++)

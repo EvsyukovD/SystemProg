@@ -366,7 +366,7 @@ void StartServerContextArgs(int argc, char* argv[]){
 void print_options()
 {
    char *options[] = {"1.Start server [ip] [port]", 
-                      "2.Start server pipe" 
+                      "2.Start server pipe [pipename]" 
                        };
    int options_num = sizeof(options) / sizeof(options[0]);
    for (int i = 0; i < options_num; i++)

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <conio.h>
 #include <tchar.h>
+#include <string.h>
 #define BUFSIZE 512
  
 void StartClientPipeContextArgs(int argc, char* argv[]){
@@ -14,8 +15,11 @@ int StartClientPipeContext(int argc, char *argv[])
    LPTSTR lpvMessage = TEXT("Default message from client."); 
    TCHAR  chBuf[BUFSIZE]; 
    BOOL   fSuccess = FALSE; 
-   DWORD  cbRead, cbToWrite, cbWritten, dwMode; 
-   LPTSTR lpszPipename = TEXT("\\\\.\\pipe\\mynamedpipe"); 
+   DWORD  cbRead, cbToWrite, cbWritten, dwMode;
+   char lpszPipename[30] = {0};
+   strcpy(lpszPipename, "\\\\.\\pipe\\");
+   strcat(lpszPipename, argv[2]);
+  // LPTSTR lpszPipename = TEXT("\\\\.\\pipe\\mynamedpipe"); 
 
    //if( argc > 1 )
      // lpvMessage = argv[2];
