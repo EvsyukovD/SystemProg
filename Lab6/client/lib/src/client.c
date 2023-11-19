@@ -10,6 +10,18 @@ void PrintLastError(){
 void PrintLastWSAError(){
     printf("Client wsa error: %d\n", WSAGetLastError());
 }
+int recv_until_sep(char sep,SOCKET socket, char* buf, int len, int flags){
+    int result = 0;
+    static int i = 0;
+    static char buffer[1024];
+    int size = 1024;
+    result = recv(socket, buffer, size, flags);
+    for(int j = 0; buffer[j] != sep && j < len; j++){
+        buf[j] = buffer[j];
+        i++;
+    }
+    return result;
+}
 WINBOOL StartClientContext(const char * ip,const char* port)
 {
     int result = E_FAIL;
@@ -73,6 +85,7 @@ int SendMessageToServer(LPVOID args){
     HANDLE receiverThread = *h;
     DWORD code = 0;
     DWORD exitCode = 0;
+    int delay_millis = 1000;
     while(isRunning){
         if (Dialog(buffer, len))
         {
@@ -97,6 +110,7 @@ int SendMessageToServer(LPVOID args){
                 }
             }
             memset(buffer, 0, len);
+            Sleep(delay_millis);
         }
     }
     return 0;
@@ -115,8 +129,9 @@ int GetMessageFromServer(LPVOID pserv){
         result = recv(server_socket, buffer, len, 0);
         if(result > 0){
             ptr = strchr(buffer, sep);
-            if(ptr &&  ptr[1] == file_id && ptr[2] == sep){//buffer: id:data or id:file_id:...
-               ProcessFilePartFromServer(&ptr[3]);
+            if(ptr &&  ptr[1] == file_id && ptr[2] == sep){//buffer: id:data or id:file_id:filename:size:data
+               int file_buf_len = len - (&ptr[3] - buffer);
+               ProcessFilePartFromServer(&ptr[3], file_buf_len);//ptr[3]: filename:size:data
             }else{
                printf("From server: client %s\n",buffer);
             }

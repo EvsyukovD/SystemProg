@@ -7,8 +7,8 @@ int clientsNumber = 2;
 CRITICAL_SECTION section = {0};
 CONDITION_VARIABLE bufferNotEmpty;
 SOCKET listen_socket = {0};
-HANDLE threads[4];
 int threadsNumber = 4;
+HANDLE threads[4];
 LinkedList* globalList = NULL;
 LinkedList* GetGlobalList(){
     return globalList;

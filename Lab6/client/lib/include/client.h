@@ -11,6 +11,7 @@ void StartClientContextArgs(int argc, char* argv[]);
 void StartClientPipeContextArgs(int argc, char* argv[]);
 int StartClientPipeContext(int argc, char* argv[]);
 void PrintLastError();
+int recv_until_sep(char sep,SOCKET, char* buf, int len, int flags);
 void PrintLastWSAError();
 void print_options();
 void FinishClientContext(ADDRINFOA* full_server,SOCKET listen_socket);
