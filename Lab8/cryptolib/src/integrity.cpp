@@ -180,14 +180,6 @@ uint8_t *md5_hash_object(const char *path, int type, HKEY* key)
         return md5_hash_reg(*key, sub_key);
         break;
     }
-    /*DWORD attributes = GetFileAttributesA(path);
-
-    if(attributes & FILE_ATTRIBUTE_DEVICE || attributes & FILE_ATTRIBUTE_DIRECTORY){
-       return md5_hash_dir(path);
-    }
-    else{
-      return md5_hash_file(path);
-    }*/
     fprintf(stderr,"Undefined object type\n");
     return NULL;
 }
