@@ -41,8 +41,7 @@ char **select_multiple_files(int *paths_number, const char* filter)
     *(ofn.lpstrFile) = 0;
     ofn.nMaxFile = MAX_PATH;
 
-    // file type filter, \0 - null character (end of string)
-    //ofn.lpstrFilter = "All Files\0*.*\0";
+
     ofn.lpstrFilter = filter;
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = szFile;
@@ -66,7 +65,6 @@ char **select_multiple_files(int *paths_number, const char* filter)
         while (*ptr)
         {
             fCount++;
-            // printf("File: %i %s\n", fCount, ptr);
             ptr += (lstrlen(ptr) + 1);
         }
         res = (char **)calloc(fCount, sizeof(char *));
@@ -80,11 +78,11 @@ char **select_multiple_files(int *paths_number, const char* filter)
             ptr += (lstrlen(ptr) + 1);
         }
 
-        printf("selected %d files\n", fCount);
+        printf("Selected %d files\n", fCount);
     }
     else
     {
-        printf("no files selected\n");
+        printf("No files selected\n");
     }
     *paths_number = fCount;
     return res;
